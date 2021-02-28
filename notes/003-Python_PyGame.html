@@ -1,0 +1,398 @@
+<meta charset="utf-8">
+**71GIIN - 003 - Python & PyGame**
+    <small>©2021 VIU - 71GIIN Introducción a la Programación de Videojuegos - Iván Fuertes</small>
+
+Python
+==============================================================
+
+Para desarrollar el videojuego de la asignatura se va a usar el lenguaje Python, que como curiosidad toma su nombre de la afición del creador original del lenguaje Guido Van Rossum hacia la serie de televisión de *Monty Python*. Pese a usarlo para crear videojuegos es un lenguaje de propósito general que se puede usar en muchos otros ámbitos, especialmente en la ciencia de datos, inteligencia artificial y desarrollo web. Hay muchas alternativas a este lenguaje, y posiblemente no sea el más adecuado para un desarrollo profesional, pero es un lenguaje muy expresivo, fácil de aprender y que suele encargarse de muchos detalles dejando que el programador se enfoque en solucionar los problemas, en este caso, eso significa centrarse en mostrar cosas por la pantalla, moverlas y hacerlas interactuar con el entorno virtual.
+
+Cualquier versión superior a 3.x puede ser usada sin problemas para el desarrollo de este videojuego, no se recomienda usar versiones 2.x por estar obsoletas. La instalación del interprete de Python para las tres grandes plataformas en ordenadores de sobremesa puede ser consultada [aquí](https://realpython.com/installing-python/). Se recomienda añadir la ruta del binario de Python a la variable PATH del sistema al menos para el usuario que va a desarrollar en la maquina.
+
+Instalación en Ubuntu
+--------------------------------------------------------------
+
+Usando la terminal y Advanced Packaging Tool se puede instalar fácilmente la última versión de Python mediante los siguientes comandos de terminal. También es recomendable instalar *pip*, el gestor de paquetes de Python.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ sudo apt-get update
+$ sudo apt-cache search python3.9
+$ sudo apt-get install python3.9
+$ sudo apt-get install python3-pip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_python]: Instalación de Python]
+
+Instalación en Windows
+--------------------------------------------------------------
+
+Para Windows se puede hacer uso del instalador que se provee en la web oficial de [Python](https://www.python.org/downloads/). Siguiendo las instrucciones del instalador, marcando las opciones de añadir Python a la variable de entorno PATH, y también marcar la instalación de pip.
+
+Virtual Environments
+==============================================================
+
+Python tiene un sistema propio de descargar, almacenar, resolver y usar paquetes o módulos. Pese a la mayoría de sus ventajas, conlleva algunas decisiones que puede llevar a ciertos problemas, particularmente en el cómo y dónde se almacenan dichos paquetes. Hay varios sitios donde esos paquetes pueden ser instalados en el sistema, usando *pip* como método habitual de instalación de paquetes, este directorio suele ser el apuntado por *site.getsitepackages*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python linenumbers
+$ python3
+
+>>> import site
+>>> site.getsitepackages()
+
+['C:\\Program Files\\Python39', 'C:\\Program Files\\Python39\\lib\\site-packages']
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_sites]: Directorios de instalación de paquetes]
+
+Esto significa que, por defecto, cualquier proyecto en el sistema usará esos mismos directorios para almacenar y conseguir los paquetes o librerías de terceros. A primera vista, puede no parecer un gran problema, sobre todo para los paquetes de sistema, pero para el resto de librerías puede convertirse en un dolor de cabeza rápidamente.
+
+Se tienen dos proyectos, A y B, ambos con una dependencia a la misma librería. El problema surge cuando se empieza a pedir diferentes versiones de la librería, quizás el proyecto A necesite la versión 1.3.2, mientras que el proyecto B puede necesitar la versión 2.1.0. Esto es un problema porque Python no puede diferenciar entre versiones en el directorio donde se almacenan los paquetes, con lo cual, ambas versiones acabarían con el mismo nombre en el mismo directorio. Y puesto que los proyectos se almacenan de acuerdo a sólo su nombre, no hay diferencia entre ellos. De esta manera, los proyectos A y B tendrían que usar la misma versión, lo cual normalmente es inaceptable, o bien, andar instalando versiones de la librería distintas cada vez que hubiera que usar el proyecto A o el B, lo cual es peor incluso. La solución es usar entornos virtuales.
+
+El objetivo principal de un entorno virtual es crear un entorno aislado para los proyectos de Python. Esto significa que cada proyecto puede tener sus propias dependencias, sin importar las dependencias que tengan otros proyectos. Habría que crear un entorno virtual separado para el proyecto A y el B, y cada entorno podría depender de su propia versión de la librería C, de manera totalmente independiente. No hay límite de entornos que se pueden tener, puesto que son simplemente directorios con unos cuantos scripts, y se gestionan fácilmente usando *virtualenv* o *pyenv*.
+
+Crear Entornos Virtuales
+--------------------------------------------------------------
+
+Hay dos maneras de usar los entornos virtuales, puesto que en las últimas versiones de Python ya es algo integrado en el lenguaje. Sin embargo, si se quiere fijar una versión de Python para cada entorno virtual, la única manera de hacerlo en todas las plataformas es mediante la herramienta *virtualenv*.
+
+Para instalar *virtualenv* hay que hacerlo a través del instalador de paquetes de Python *pip*, desde la línea de comandos.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ python -m pip install virtualenv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_virtualenv]: Instalar virtualenv con pip]
+
+Se suele usar la convención de crear los entornos virtuales dentro de cada proyecto en el directorio raíz de los mismos, en una carpeta que se suele llamar *.venv*. De tal forma que dentro de cada proyecto ya van contenidos tanto la versión de Python requerida como los paquetes de los que se dependen.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ mkdir Project
+$ cd Project
+$ virtualenv --python=/usr/bin/python3.9 .venv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [create_virtualenv]: Crear entorno virtual con la versión 3.9 de Python]
+
+Se puede observar que primero se accede al directorio del proyecto donde se quiere crear el entorno virtual, y luego se crea el mismo. El primer parámetro indica la versión de Python a usar, en este caso la 3.9 que ha sido previamente instalada en la ruta que se muestra (/usr/bin/python3.9). El segundo parámetro es el nombre de la carpeta donde se quiere crear el entorno virtual. Esto deja una estructura de carpetas similar a la siguiente.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+Project
+└── .venv
+    ├── bin
+    │   ├── activate
+    │   ├── activate.csh
+    │   ├── activate.fish
+    │   ├── activate.ps1
+    │   ├── activate_this.py
+    │   ├── activate.xsh
+    │   ├── pip
+    │   ├── pip3
+    │   ├── pip-3.9
+    │   ├── pip3.9
+    │   ├── python -> /usr/bin/python3.9
+    │   ├── python3 -> python
+    │   ├── python3.9 -> python
+    │   ├── wheel
+    │   ├── wheel3
+    │   ├── wheel-3.9
+    │   └── wheel3.9
+    ├── .gitignore
+    ├── lib
+    │   └── python3.9
+    └── pyvenv.cfg
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [virtualenv_folders]: Estructura de Carpetas de un Entorno Virtual]
+
+También se puede generar un entorno virtual usando el propio Python, pero en este caso sin especificar una versión distinta de Python y usar la misma que tiene el sistema instalado.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ mkdir Project
+$ cd Project
+$ python -m venv .venv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [create_virtualenv2]: Crear entorno virtual desde Python]
+
+Usar Entornos Virtuales en Ubuntu
+--------------------------------------------------------------
+
+Una vez creado el entorno virtual para un proyecto, llega el momento de activarlo cuando se va a empezar a trabajar con dicho proyecto. En la carpeta *bin* dentro del entorno virtual hay una serie de scripts para activar y desactivar dicho entorno.
+
+A partir de aquí siempre se asumirá que se tiene el entorno virtual activado para trabajar con el proyecto.
+
+Para usar los paquetes de este proyecto en aislamiento, es decir, activar este entorno virtual, hay que llamar al script correspondiente.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ source .venv/bin/activate
+(.venv)$
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [activate_virtualenv]: Activar entorno virtual]
+
+ Al hacerlo correctamente el prompt de la terminal cambia, y mantiene el prefijo con el nombre del entorno activado, para mostrar que se está haciendo uso de él. A partir de ese momento, Python usará los paquetes y ajustes de este entorno.
+
+ Cuando se acaba de usar dicho entorno, hay que desactivarlo para devolver todo a la normalidad.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+(.venv)$ deactivate
+$
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [deactivate_virtualenv]: Activar entorno virtual]
+
+Usar Entornos Virtuales en Windows
+--------------------------------------------------------------
+
+Para activar un entorno virtual en Windows hay que llamar al archivo *.bat* diseñado para eso. Desactivarlo se hace de manera idéntica a Ubuntu.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ \.venv\Scripts\activate.bat
+(.venv)$
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [activate_virtualenv_win]: Activar entorno virtual]
+
+
+Cómo Funciona
+--------------------------------------------------------------
+
+Saber como funciona por debajo este sistema puede resultar de cierta relevancia en determinados momentos. Cuando no hay ningún entorno virtual activado el ejecutable de Python que se usa es el del sistema.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ which python3
+/usr/bin/python3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [which_python]: Localización de Python en Sistema]
+
+Activando el entorno virtual el ejecutable de Python que se usa es el del propio entorno.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ source .venv/bin/activate
+(.venv)$ which python3
+/home/user/Documents/projects/Project/.venv/bin/python3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [which_python2]: Localización de Python en Entorno Virtual]
+
+Esto sucede porque en un entorno activo la variable de sistema *PATH* se modifica para apuntar a la instalación correcta en cada caso.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+$ echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+$ source .venv/bin/activate
+(.venv)$ echo $PATH
+/home/user/Documents/projects/Project/.venv/bin/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [path]: Variable PATH Antes y Después de Activar un Entorno]
+
+Se puede observar que con el entorno activado se ha añadido la carpeta del entorno al *PATH* al principio. Esto significa que es el primer sitio donde el sistema buscará el ejecutable al lanzarlo desde la linea de comandos. Y entonces la terminal usa la instancia de Python del entorno en lugar de la del sistema.
+
+Para que todo esto funcione también con los paquetes hay que conocer como funciona Python. Cuando se arranca Python, busca en el directorio donde está alojado el binario que se está ejecutando. En un entorno virtual, es una copia local o un enlace simbólico al del sistema. Entonces coloca las direcciones de *sys.prefix* y *sys.exec.prefix* basándose en ese directorio. Y estas rutas son las que se usan para localizar el directorio de los paquetes buscando por el path relativo a ellas.
+
+Proyecto
+==============================================================
+
+Para crear las bases del proyecto se va a usar la estructura clásica de un proyecto de Python donde en la carpeta raíz se encuentra el directorio para el entorno virtual, otro para documentos, y otro donde está todo el código de la aplicación. Y en este primer nivel un fichero *setup.py* encargado de la instalación de la aplicación.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+└── ShMUp
+    ├── .venv
+    ├── docs
+    ├── README.md
+    ├── setup.py
+    └── shmup
+        ├── app.py
+        ├── __init__.py
+        └── __main__.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [project_folder]: Estructura de Ficheros del Proyecto]
+
+El fichero *`__init__.py`* por ahora estará vacío, pero pese a ello le dice al interprete de Python que este directorio va a funcionar como un paquete, lo que facilita mucho las cosas a la hora de importar las clases y métodos desde el paquete como un todo.
+
+El fichero *`__main__.py`* es un fichero que se ejecuta cuando se lanza el paquete de primer nivel directamente a través del interprete de python. Y contiene el punto de entrada del juego. Se usa el *idiom* de Python de verificar si se está ejecutando como fichero de primer nivel, o si ha sido importado, en el primer caso se ejecuta la función *main*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
+import sys
+
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
+    print("Main module speaking")
+
+if __name__ == '__main__':
+    sys.exit(main())
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [__main__.py]: Fichero *`__main__.py`*]
+
+Para que el interprete de Python reconozca el paquete y se pueda importar sin problemas además hay que crear un fichero *setup.py*, y usar los *setuptools* de Python para instalar el paquete. En este fichero se especifican los paquetes que exporta, puntos de entrada,... Más adelante cuando el juego esté acabado se puede volver a este fichero y añadirle más información acerca de la instalación del mismo.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
+from setuptools import setup
+
+setup(
+    name="shmup",
+    version="0.0.1",
+    packages=["shmup"],
+    entry_points={
+        "console_scripts": [
+            "shmup = shmup.__main__:main"
+        ]
+    },
+)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [setup.py]: Fichero *setup.py*]
+
+Una vez finalizado el juego se puede proceder a su instalación usando el comando *pip*, e incluso se puede pretender subirlo al repositorio de *PyPI* para hacerlo público.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+(.venv)$ pip install .
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_shmup]: Instalación de ShMUp]
+
+Si todo ha ido bien se puede llamar directamente al proyecto instalado desde la línea de comando estando en la raíz del proyecto.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+(.venv)$ cd ShMUp
+(.venv)$ python3 -m shmup
+Main module speaking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [run_project]: Lanzar Juego]
+
+PyGame
+==============================================================
+
+PyGame es una librería específica para desarrollo de videojuegos para Python. Está construida sobre otra librería de creación de videojuegos llamada *Simple DirectMedia Layer* o *SDL*. *SDL* fue desarrollada por *Loki SW* para simplificar la tarea de portar juegos de una plataforma a otra. Proporcionaba una manera común de crear una pantalla en varias plataformas y poder trabajar con gráficos y dispositivos de entrada. Puesto que su uso era muy sencillo, se volvió muy popular entre los desarrolladores de videojuegos cuando se publicó en el año 1998, y desde entonces ha sido usada en multitud de juegos comerciales.
+
+SDL fue escrita en C, un lenguaje usado comúnmente en videojuegos por su velocidad y capacidad de trabajar con el hardware a bajo nivel. Pero desarrollar en C, o en C++, puede ser lento y es fácil caer en errores y problemas. Por lo tanto, se produjeron *bindings* a muchos otros lenguajes, y SDL se pudiera usar desde casi cualquier lenguaje. Uno de estos *bindings* es PyGame, que ofrece a los programadores de Python el acceso a la librería SDL.
+
+Estas dos librerías han estado en constante desarrollo desde su creación, y puesto que ambas son de código abierto, un gran número de programadores han trabajado en pulir y mejorar estas herramientas para crear juegos.
+
+Se puede acceder a la documentación de la librería, tutoriales,... desde [aquí](https://www.pygame.org/news).
+
+Instalar PyGame
+--------------------------------------------------------------
+
+Instalar módulos en Python hoy en día es una tárea sencilla gracias al gestor de paquetes *pip*. El paquete PyGame está disponible en el repositorio de paquetes de PyPI [aquí](https://pypi.org/project/pygame/).
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+(.venv)$ pip install pygame
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_pygame]: Instalación de PyGame]
+
+Esto debería dejar instalada la librería PyGame dentro de nuestro entorno virtual en cualquier plataforma.
+
+Módulos
+--------------------------------------------------------------
+
+El paquete PyGame contiene varios módulos que pueden ser usados independientemente. Hay un módulo para cada uno de los dispositivos que se pueden usar en un juego, y muchos otros para simplificar el desarrollo. Se acceden a dichos módulos a través del espacio de nombres *pygame*, por ejemplo, *pygame.display* se refiere al módulo *display*.
+
+Nombre | Proposito 
+-------|-----------
+*pygame.BufferProxy* | Vista de píxels de surfaces
+*pygame.cdrom* | Accede y controla discos CD
+*pygame.Color* | Representación de colores
+*pygame.cursors* | Carga imagenes para cursores
+*pygame.display* | Accede a pantallas
+*pygame.draw* | Pinta formas, líneas y puntos
+*pygame.event* | Gestiona eventos externos
+*pygame.font* | Usa fuentes TrueType para texto
+*pygame.freetype* | Carga y pintado de fuentes mejorado
+*pygame.gfxdraw* | Funciones de pintado con anti-aliasing
+*pygame.image* | Carga y guarda imágenes
+*pygame.joystick* | Usa mandos de juego
+*pygame.key* | Lee teclas pulsadas en el teclado
+*pygame.locals* | Constantes de pygame
+*pygame.mixer* | Carga y reproduce sonidos
+*pygame.mixer.music* | Carga y reproduce sonidos
+*pygame.mouse* | Gestiona el ratón
+*pygame.Overlay* | Gestiona transparencias
+*pygame* | Funciones de pygame de alto nivel
+*pygame.PixelArray* | Manipula datos de píxels de imágenes
+*pygame.Rect* | Gestiona áreas rectangulares
+*pygame.scrap* | Acceso al clipboard
+*pygame.sndarray* | Manipula datos de sonido
+*pygame.sprite* | Gestiona imágenes en movimiento
+*pygame.Surface* | Objetos para imágenes y la pantalla
+*pygame.surfarray* | Manipula datos de píxels de imágenes
+*pygame.time* | Gestiona temporizadores y frame rate
+*pygame.transform* | Redimensiona y mueve imágenes
+[Table [modules]: Módulos de PyGame]
+
+Para acceder al listado completo de módulos y toda la documentación se puede acceder a la web oficial de PyGame [aquí](http://www.pygame.org/docs/). Algunos de estos módulos se usan de manera habitual, mientras que otros se usan de manera menos frecuente. Todos los juegos tendrá alguna forma de pantalla, así que el módulo *display* es esencial, y se necesitará algún tipo de entrada del usuario, sea por teclado, joystick o ratón.
+
+Es posible que algunos de los módulos no esté presente en alguna plataforma, el hardware quizás no soporte alguna característica o bien los drivers correspondientes no estén instalados. En ese caso, *PyGame* pondrá ese módulo a *None*, para verificar si un módulo está disponible se puede hacer lo siguiente.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
+if pygame.font is None:
+    print("Font Module Not Available")
+    exit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [check_module]: Verificar Existencia de Módulo]
+
+Hello World
+--------------------------------------------------------------
+
+Para verificar que todo funciona y empezar a conocer como funciona PyGame es interesante realizar una pequeña prueba, el típico *Hello World*.
+
+El primer paso es intentar arrancar nuestra aplicación desde el *`__main__.py`*. Para ello se va a crear un fichero *app.py* dentro del directorio del juego. Se importa en el *main*, se crea una instancia de la clase *App*, y se llama a su método *start()* para arrancar el juego.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
+from shmup import app
+...
+game = app.App()
+game.start()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [call_App]: Llamar a Clase App desde main()]
+
+El fichero *app.py* será una clase simple que abrirá una ventana y pintará un circulo en medio, pero hará uso de las llamadas básicas a PyGame.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
+import pygame
+
+class App:
+    def __init__(self):
+        pass
+
+    def start(self):
+        # Simple pygame program
+
+        # Import and initialize the pygame library
+        pygame.init()
+
+        # Set up the drawing window
+        screen = pygame.display.set_mode([500, 500])
+
+        # Run until the user asks to quit
+        running = True
+        while running:
+
+            # Did the user click the window close button?
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            # Fill the background with gray
+            screen.fill((255, 255, 255))
+
+            # Draw a solid blue circle in the center
+            pygame.draw.circle(screen, (60,139,210), (250, 250), 75)
+
+            # Flip the display
+            pygame.display.flip()
+
+        # Done! Time to quit.
+        pygame.quit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [app_helloworld]: Clase App para el *Hello World*]
+
+En primer lugar se importa la librería PyGame para poder acceder a todas sus funcionalidades. Dentro del método *start*, la primera tárea es inicializar el módulo PyGame, para ellos se llama al método *pygame.init()*, aquí se inicializan y se arrancan todos sus subsistemas. Hay que acordarse de llamar a *pygame.quit()* al final del juego para liberar todos los recursos que PyGame pudiera haber adquirido durante su ejecución.
+
+Uno de los aspectos más importantes que provee PyGame es la creación de una ventana y un contexto de pintado, donde poder pintar los assets del juego, interactuar con el jugador,... Para esto se llama a la función *pygame.display.setmode()*, donde al menos le proveemos con las dimensiones de la ventana que se quiere crear.
+
+Luego se entra en un bucle infinito, el *Main Loop*, que es el núcleo de todo juego. Como se ha visto anteriormente, un juego siempre está trabajando, leyendo las entradas del jugador, actualizando el mundo virtual y luego pintando ese mundo en cada instante. Esto se realiza una y otra vez, al menos 30 ó 60 veces por segundo. Y esto es lo que se muestra en este *Main Loop*, se ejecuta hasta que el jugador decide acabar con el juego.
+
+Dentro de este *loop* primero se le pregunta a PyGame si hay algún evento de entrada disponible para procesar, es decir, si el usuario ha realizado alguna acción, y si esa acción es la de quitar el juego, entonces se cambia el flag que hace de guarda del bucle principal y se sale del mismo. En este caso, PyGame provee de un *pygame.QUIT* que se dispara cuando el usuario pulsa el botón de cerrar la ventana.
+
+A continuación, se debería actualizar el mundo de juego, pero como en este ejemplo no hay nada se omite este paso.
+
+Lo que se hace entonces es empezar con el pintado de la escena, el primer paso siempre es borrar la escena con un color sólido, en este caso un gris. Y luego se pinta un círculo de color azulado, con su centro en el medio de la pantalla (250, 250), y de radio 75 píxels.
+
+Una vez se ha acabado de pintar en pantalla se procede a mostrar lo pintado en la pantalla usando la instrucción *pygame.display.flip()*.
+
+Al salir del búcle hay que liberar los recursos de PyGame y se devuelve el control a quien llamó al método *start()* y cierra la aplicación.
+
+<link rel="stylesheet" href="res/md/viu.css">
+<style class="fallback">body{visibility:hidden}</style><script>markdeepOptions={tocStyle:'long'};</script>
+<!-- Markdeep: --><script src="res/md/markdeep.min.js?" charset="utf-8"></script>
