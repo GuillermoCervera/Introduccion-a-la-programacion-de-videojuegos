@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-**71GIIN - 003 - Python & PyGame**
+**71GIIN - 003 - Python**
     <small>©2021 VIU - 71GIIN Introducción a la Programación de Videojuegos - Iván Fuertes</small>
 
 Python
@@ -59,6 +59,11 @@ Para instalar *virtualenv* hay que hacerlo a través del instalador de paquetes 
 $ python -m pip install virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [install_virtualenv]: Instalar virtualenv con pip]
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash linenumbers
+sudo apt-get install python3-virtualenv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [install_virtualenv2]: Instalar virtualenv con apt-get]
 
 Se suele usar la convención de crear los entornos virtuales dentro de cada proyecto en el directorio raíz de los mismos, en una carpeta que se suele llamar *.venv*. De tal forma que dentro de cada proyecto ya van contenidos tanto la versión de Python requerida como los paquetes de los que se dependen.
 
@@ -249,149 +254,6 @@ Si todo ha ido bien se puede llamar directamente al proyecto instalado desde la 
 Main module speaking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [run_project]: Lanzar Juego]
-
-PyGame
-==============================================================
-
-PyGame es una librería específica para desarrollo de videojuegos para Python. Está construida sobre otra librería de creación de videojuegos llamada *Simple DirectMedia Layer* o *SDL*. *SDL* fue desarrollada por *Loki SW* para simplificar la tarea de portar juegos de una plataforma a otra. Proporcionaba una manera común de crear una pantalla en varias plataformas y poder trabajar con gráficos y dispositivos de entrada. Puesto que su uso era muy sencillo, se volvió muy popular entre los desarrolladores de videojuegos cuando se publicó en el año 1998, y desde entonces ha sido usada en multitud de juegos comerciales.
-
-SDL fue escrita en C, un lenguaje usado comúnmente en videojuegos por su velocidad y capacidad de trabajar con el hardware a bajo nivel. Pero desarrollar en C, o en C++, puede ser lento y es fácil caer en errores y problemas. Por lo tanto, se produjeron *bindings* a muchos otros lenguajes, y SDL se pudiera usar desde casi cualquier lenguaje. Uno de estos *bindings* es PyGame, que ofrece a los programadores de Python el acceso a la librería SDL.
-
-Estas dos librerías han estado en constante desarrollo desde su creación, y puesto que ambas son de código abierto, un gran número de programadores han trabajado en pulir y mejorar estas herramientas para crear juegos.
-
-Se puede acceder a la documentación de la librería, tutoriales,... desde [aquí](https://www.pygame.org/news).
-
-Instalar PyGame
---------------------------------------------------------------
-
-Instalar módulos en Python hoy en día es una tárea sencilla gracias al gestor de paquetes *pip*. El paquete PyGame está disponible en el repositorio de paquetes de PyPI [aquí](https://pypi.org/project/pygame/).
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
-(.venv)$ pip install pygame
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Listing [install_pygame]: Instalación de PyGame]
-
-Esto debería dejar instalada la librería PyGame dentro de nuestro entorno virtual en cualquier plataforma.
-
-Módulos
---------------------------------------------------------------
-
-El paquete PyGame contiene varios módulos que pueden ser usados independientemente. Hay un módulo para cada uno de los dispositivos que se pueden usar en un juego, y muchos otros para simplificar el desarrollo. Se acceden a dichos módulos a través del espacio de nombres *pygame*, por ejemplo, *pygame.display* se refiere al módulo *display*.
-
-Nombre | Proposito 
--------|-----------
-*pygame.BufferProxy* | Vista de píxels de surfaces
-*pygame.cdrom* | Accede y controla discos CD
-*pygame.Color* | Representación de colores
-*pygame.cursors* | Carga imagenes para cursores
-*pygame.display* | Accede a pantallas
-*pygame.draw* | Pinta formas, líneas y puntos
-*pygame.event* | Gestiona eventos externos
-*pygame.font* | Usa fuentes TrueType para texto
-*pygame.freetype* | Carga y pintado de fuentes mejorado
-*pygame.gfxdraw* | Funciones de pintado con anti-aliasing
-*pygame.image* | Carga y guarda imágenes
-*pygame.joystick* | Usa mandos de juego
-*pygame.key* | Lee teclas pulsadas en el teclado
-*pygame.locals* | Constantes de pygame
-*pygame.mixer* | Carga y reproduce sonidos
-*pygame.mixer.music* | Carga y reproduce sonidos
-*pygame.mouse* | Gestiona el ratón
-*pygame.Overlay* | Gestiona transparencias
-*pygame* | Funciones de pygame de alto nivel
-*pygame.PixelArray* | Manipula datos de píxels de imágenes
-*pygame.Rect* | Gestiona áreas rectangulares
-*pygame.scrap* | Acceso al clipboard
-*pygame.sndarray* | Manipula datos de sonido
-*pygame.sprite* | Gestiona imágenes en movimiento
-*pygame.Surface* | Objetos para imágenes y la pantalla
-*pygame.surfarray* | Manipula datos de píxels de imágenes
-*pygame.time* | Gestiona temporizadores y frame rate
-*pygame.transform* | Redimensiona y mueve imágenes
-[Table [modules]: Módulos de PyGame]
-
-Para acceder al listado completo de módulos y toda la documentación se puede acceder a la web oficial de PyGame [aquí](http://www.pygame.org/docs/). Algunos de estos módulos se usan de manera habitual, mientras que otros se usan de manera menos frecuente. Todos los juegos tendrá alguna forma de pantalla, así que el módulo *display* es esencial, y se necesitará algún tipo de entrada del usuario, sea por teclado, joystick o ratón.
-
-Es posible que algunos de los módulos no esté presente en alguna plataforma, el hardware quizás no soporte alguna característica o bien los drivers correspondientes no estén instalados. En ese caso, *PyGame* pondrá ese módulo a *None*, para verificar si un módulo está disponible se puede hacer lo siguiente.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
-if pygame.font is None:
-    print("Font Module Not Available")
-    exit()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Listing [check_module]: Verificar Existencia de Módulo]
-
-Hello World
---------------------------------------------------------------
-
-Para verificar que todo funciona y empezar a conocer como funciona PyGame es interesante realizar una pequeña prueba, el típico *Hello World*.
-
-El primer paso es intentar arrancar nuestra aplicación desde el *`__main__.py`*. Para ello se va a crear un fichero *app.py* dentro del directorio del juego. Se importa en el *main*, se crea una instancia de la clase *App*, y se llama a su método *start()* para arrancar el juego.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
-from shmup import app
-...
-game = app.App()
-game.start()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Listing [call_App]: Llamar a Clase App desde main()]
-
-El fichero *app.py* será una clase simple que abrirá una ventana y pintará un circulo en medio, pero hará uso de las llamadas básicas a PyGame.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
-import pygame
-
-class App:
-    def __init__(self):
-        pass
-
-    def start(self):
-        # Simple pygame program
-
-        # Import and initialize the pygame library
-        pygame.init()
-
-        # Set up the drawing window
-        screen = pygame.display.set_mode([500, 500])
-
-        # Run until the user asks to quit
-        running = True
-        while running:
-
-            # Did the user click the window close button?
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-
-            # Fill the background with gray
-            screen.fill((255, 255, 255))
-
-            # Draw a solid blue circle in the center
-            pygame.draw.circle(screen, (60,139,210), (250, 250), 75)
-
-            # Flip the display
-            pygame.display.flip()
-
-        # Done! Time to quit.
-        pygame.quit()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Listing [app_helloworld]: Clase App para el *Hello World*]
-
-En primer lugar se importa la librería PyGame para poder acceder a todas sus funcionalidades. Dentro del método *start*, la primera tárea es inicializar el módulo PyGame, para ellos se llama al método *pygame.init()*, aquí se inicializan y se arrancan todos sus subsistemas. Hay que acordarse de llamar a *pygame.quit()* al final del juego para liberar todos los recursos que PyGame pudiera haber adquirido durante su ejecución.
-
-Uno de los aspectos más importantes que provee PyGame es la creación de una ventana y un contexto de pintado, donde poder pintar los assets del juego, interactuar con el jugador,... Para esto se llama a la función *pygame.display.setmode()*, donde al menos le proveemos con las dimensiones de la ventana que se quiere crear.
-
-Luego se entra en un bucle infinito, el *Main Loop*, que es el núcleo de todo juego. Como se ha visto anteriormente, un juego siempre está trabajando, leyendo las entradas del jugador, actualizando el mundo virtual y luego pintando ese mundo en cada instante. Esto se realiza una y otra vez, al menos 30 ó 60 veces por segundo. Y esto es lo que se muestra en este *Main Loop*, se ejecuta hasta que el jugador decide acabar con el juego.
-
-Dentro de este *loop* primero se le pregunta a PyGame si hay algún evento de entrada disponible para procesar, es decir, si el usuario ha realizado alguna acción, y si esa acción es la de quitar el juego, entonces se cambia el flag que hace de guarda del bucle principal y se sale del mismo. En este caso, PyGame provee de un *pygame.QUIT* que se dispara cuando el usuario pulsa el botón de cerrar la ventana.
-
-A continuación, se debería actualizar el mundo de juego, pero como en este ejemplo no hay nada se omite este paso.
-
-Lo que se hace entonces es empezar con el pintado de la escena, el primer paso siempre es borrar la escena con un color sólido, en este caso un gris. Y luego se pinta un círculo de color azulado, con su centro en el medio de la pantalla (250, 250), y de radio 75 píxels.
-
-Una vez se ha acabado de pintar en pantalla se procede a mostrar lo pintado en la pantalla usando la instrucción *pygame.display.flip()*.
-
-Al salir del búcle hay que liberar los recursos de PyGame y se devuelve el control a quien llamó al método *start()* y cierra la aplicación.
 
 <link rel="stylesheet" href="res/md/viu.css">
 <style class="fallback">body{visibility:hidden}</style><script>markdeepOptions={tocStyle:'long'};</script>
