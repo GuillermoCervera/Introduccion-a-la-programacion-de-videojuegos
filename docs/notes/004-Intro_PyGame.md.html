@@ -30,12 +30,12 @@ Módulos
 
 El paquete PyGame contiene varios módulos que pueden ser usados independientemente. Hay un módulo para cada uno de los dispositivos que se pueden usar en un juego, y muchos otros para simplificar el desarrollo. Se acceden a dichos módulos a través del espacio de nombres *pygame*, por ejemplo, *pygame.display* se refiere al módulo *display*.
 
-Nombre | Objetivo 
+Nombre | Objetivo
 -------|-----------
 *pygame.BufferProxy* | Vista de píxels de surfaces
 *pygame.cdrom* | Accede y controla discos CD
 *pygame.Color* | Representación de colores
-*pygame.cursors* | Carga imagenes para cursores
+*pygame.cursors* | Carga imágenes para cursores
 *pygame.display* | Accede a pantallas
 *pygame.draw* | Pinta formas, líneas y puntos
 *pygame.event* | Gestiona eventos externos
@@ -141,9 +141,9 @@ class Game:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [game_helloworld]: Clase Game para el *Hello World*]
 
-En primer lugar se importa la librería PyGame para poder acceder a todas sus funcionalidades y submódulos. La segunda línea importa una serie de funciones y constantes en el espacio de nombres actual, no es esencial para usar PyGame, pero es más cómodo al no tener que estar usando el prefijo de *pygame.locals* para valores que se usan muy a menudo. El último import hace referencia al módulo *os* de Python que provee una forma portable de usar funcionalidad del sistema operativo.    
+En primer lugar se importa la librería PyGame para poder acceder a todas sus funcionalidades y submódulos. La segunda línea importa una serie de funciones y constantes en el espacio de nombres actual, no es esencial para usar PyGame, pero es más cómodo al no tener que estar usando el prefijo de *pygame.locals* para valores que se usan muy a menudo. El último import hace referencia al módulo *os* de Python que provee una forma portable de usar funcionalidad del sistema operativo.
 
-Dentro del método *run*, la primera tárea es inicializar el módulo PyGame, para ellos se llama al método *pygame.init()*, aquí se inicializan y se arrancan todos sus subsistemas, lo que cargará los drivers y buscará el hardware necesario para que PyGame esté listo para usar todos los dispositivos en la máquina. Se pueden inicializar sólo los módulos que se van a usar, llamando a la función *init* de cada submódulo de manera individual, por ejemplo, *pygame.sound.init()* inicializará solo el módulo de sonido. Esto puede hacer que el arranque del juego sea un poco más rápido, puesto que solo se inician los módulos que se van a usar realmente. Pero la mayoría de juegos usan casi todos los módulos, así que es más simple iniciarlos todos. Tras este paso, ya se puede usar PyGame de manera completa.    
+Dentro del método *run*, la primera tárea es inicializar el módulo PyGame, para ellos se llama al método *pygame.init()*, aquí se inicializan y se arrancan todos sus subsistemas, lo que cargará los drivers y buscará el hardware necesario para que PyGame esté listo para usar todos los dispositivos en la máquina. Se pueden inicializar sólo los módulos que se van a usar, llamando a la función *init* de cada submódulo de manera individual, por ejemplo, *pygame.sound.init()* inicializará solo el módulo de sonido. Esto puede hacer que el arranque del juego sea un poco más rápido, puesto que solo se inician los módulos que se van a usar realmente. Pero la mayoría de juegos usan casi todos los módulos, así que es más simple iniciarlos todos. Tras este paso, ya se puede usar PyGame de manera completa.
 
 Tras iniciar PyGame, hay que crear una superficie de visualización.
 
@@ -155,7 +155,7 @@ pygame.display.set_caption("Hello World...")
 
 La visualización puede ser una ventana en el escritorio o la pantalla completa, pero siempre se tiene acceso a ella a través de un objeto *Surface* de PyGame. La llamada a *pygame.display.set_mode()* devuelve un objeto Surface que representa la ventana en el escritorio. El primer parámetro que recibe es una tupla con el ancho y alto de la ventana que se quiere crear. En este caso, de 640x480 píxels. El siguiente parámetro es un valor que contiene una serie de *flags* usadas en la creación de la ventana. Un *flag* es una característica que puede ser activada o desactivada, se pueden combinar varios *flags* con la operación de manipulación de bits *Or*, operador *`|`*. Por ejemplo, para crear una superficie de pintado acelerada por hardware de doble buffer, se puede poner el parametro de *flag* a *DOUBLEBUF`|`HWSURFACE*.... En Table [display_flags] están detalladas las *flags* que se pueden usar. Por ahora, se dejan todas deshabilitadas, por eso se le pasa el valor 0, que es el valor por defecto.
 
-Flag | Objetivo 
+Flag | Objetivo
 -----|-----------
 *FULLSCREEN* | Crea una ventana que ocupa toda la pantalla
 *DOUBLEBUF* | Crea una ventana con doble buffer, recomendada para *HWSURFACE* o *OPENGL*
@@ -180,7 +180,7 @@ Profundidad de Bits | Número de Colores
 
 Si todo ha ido bien, la llamada a *set_mode* muestra una ventana en el escritorio y devuelve un objeto Surface, que se almacena en la variable *screen*. Entonces, se llama a *set_caption* del módulo *display* para ponerle nombre a la barra de título de la ventana, en este caso, el mensaje *Hello World...*.
 
-A continuación, se usa la función *load* dentro del módulo *image* de PyGame para cargar la imagen que se va a usar posteriormente. La ruta del fichero está guardada en el miembro de clase estático *hero_image_filename* en forma de lista desde el directorio raíz del proyecto. Para cargar la imágen se usa *path.join* del módulo *os* para componer la ruta final de manera cross platform.
+A continuación, se usa la función *load* dentro del módulo *image* de PyGame para cargar la imagen que se va a usar posteriormente. La ruta del fichero está guardada en el miembro de clase estático *hero_image_filename* en forma de lista desde el directorio raíz del proyecto. Para cargar la imagen se usa *path.join* del módulo *os* para componer la ruta final de manera cross platform.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
 hero_image = pygame.image.load(os.path.join(*Game.hero_image_filename)).convert_alpha()
@@ -278,7 +278,7 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             exit()
-        
+
     pygame.display.update()
 
 pygame.quit()
@@ -368,18 +368,18 @@ while True:
     screen.fill((0, 0, 0))
 
     screen.blit(circle, (x, y))
-        
+
     pygame.display.update()
 
 pygame.quit()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [keyboard_events]: Eventos de Teclado]
 
-Usando estos eventos se controla el manejo de un círculo en pantalla con el teclado. Primero se crea un círculo sobre una *Surface* con el método *circle* del módulo *draw*. 
+Usando estos eventos se controla el manejo de un círculo en pantalla con el teclado. Primero se crea un círculo sobre una *Surface* con el método *circle* del módulo *draw*.
 
 Dentro del condicional donde se verifica que el evento que llega es de tipo *KEYDOWN*, se comprueba que la tecla pulsada sea una de las teclas de cursor. Si se pulsa el cursor izquierdo, llega *K_LEFT*, en ese caso la variable *move_x* se pone a -1, si llega *K_RIGHT* se pone a +1, si llega *K_UP* entonces *move_y* se pone a -1 y se llega *K_DOWN* a +1.
 
-Esta variable se suma a las *x,y* que determinan la posición donde se pinta el círculo sobre la pantalla. 
+Esta variable se suma a las *x,y* que determinan la posición donde se pinta el círculo sobre la pantalla.
 
 Se gestiona también la llegada de los eventos *KEYUP*, para dejar de mover el círculo cuando el jugador suelta la tecla del cursor. El código dentro de este condicional es similar al anterior, pero se ponen las variables *move_x* y *move_y* a 0 siempre para parar el movimiento.
 
@@ -404,7 +404,7 @@ pygame.event.set_blocked([KEYDOWN, KEYUP])
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [block_keys]: Bloquear Varios Eventos de Teclado]
 
-Si se quieren desbloquear todos los eventos, se le pasa el valor *None* a la función, esto producirá que todos los eventos se encolen. 
+Si se quieren desbloquear todos los eventos, se le pasa el valor *None* a la función, esto producirá que todos los eventos se encolen.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
 pygame.event.set_blocked(None)
@@ -470,7 +470,7 @@ screen = pygame.display.set_mode([640, 480], 0, 32)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Listing [open_window]: Crear una Ventana]
 
-El primer parámetro es el tamaño de la ventana que se quiere crear. Un tamaño de *(640, 480)* crea una ventana pequeña que se puede ver sin problemas en cualquier ordenador de escritorio, pero se puede usar cualquier resolución. 
+El primer parámetro es el tamaño de la ventana que se quiere crear. Un tamaño de *(640, 480)* crea una ventana pequeña que se puede ver sin problemas en cualquier ordenador de escritorio, pero se puede usar cualquier resolución.
 Ejecutar el juego en una ventana es ventajoso para depurar, pero muchos juegos llenan la pantalla completa y no tienen la barra de título o bordes. El modo de pantalla completa suele ser más rápido ya que el juego no tiene que cooperar con otras ventanas en la pantalla. Para usar una ventana en modo pantalla completa, hay que usar el flag *FULLSCREEN* en el segundo parámetro de la función *set_mode*.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ python linenumbers
@@ -527,12 +527,12 @@ while True:
                 if full_screen:
                     screen = pygame.display.set_mode([640, 480], FULLSCREEN, 32)
                 else:
-                    screen = pygame.display.set_mode([640, 480], 0, 32) 
+                    screen = pygame.display.set_mode([640, 480], 0, 32)
 
     screen.fill((0, 0, 0))
 
     screen.blit(circle, (screen.get_width()/2 - circle.get_width()/2, screen.get_height()/2 - circle.get_width()/2))
-        
+
     pygame.display.update()
 
 pygame.quit()
@@ -572,7 +572,7 @@ while True:
     screen.fill((0, 0, 0))
 
     screen.blit(circle, (screen.get_width()/2 - circle.get_width()/2, screen.get_height()/2 - circle.get_width()/2))
-        
+
     pygame.display.update()
 
 pygame.quit()
@@ -677,7 +677,7 @@ while True:
     screen.fill((0, 0, 0))
 
     screen.blit(text, (screen.get_width()/2 - text.get_width()/2, screen.get_height()/2 - text.get_width()/2))
-        
+
     pygame.display.update()
 
 pygame.quit()

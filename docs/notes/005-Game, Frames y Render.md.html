@@ -1,0 +1,892 @@
+<meta charset="utf-8">
+**71GIIN - 005 - Game, Frames y Render**
+    <small>©2021 VIU - 71GIIN Introducción a la Programación de Videojuegos - Iván Fuertes</small>
+
+Clase Game
+==============================================================
+
+Para empezar a organizar el código se va a empezar por crear una clase *Game*, que va a ser la raíz donde va a arrancar todo el código. En lugar de tenerlo todo en una función única, se va a mover el código de una manera más estructurada. Se puede extraer funcionalidad separada en diferentes funciones, y usarlas dentro de la clase *Game*. En el ejemplo del capítulo anterior se tenían tres áreas muy diferenciadas, incialización, procesado de eventos y pintado. Si se continuara desarrollando, estas tres partes crecerían bastante, y se acabaría con una pared gigante de código, casi imposible de navegar. Estructurarlo en la clase *Game* ayudará a eso.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+class Game:
+    def __init__(self):
+        pass
+
+    def run(self):
+        pass
+
+    def __process_events(self):
+        pass
+
+    def __update(self):
+        pass
+
+    def __render(self):
+        pass
+
+    def __quit(self):
+        pass
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [game_proto]: Prototipo de la Clase *Game*]
+
+El único método público de la clase es *run*, que es el punto de entrada desde el cual el *`__main__.py`* llama a la clase una vez creada la instancia. Se puede mover el código de inicialización al constructor de la clase, el *main loop* se mantiene en la función *run*, pero esta llama a *process_events*, *update* y *render* para mantener esas tres funcionalidades separadas. Y por último al acabar el *main loop* se llama a *quit* para liberar recursos.
+
+Constructor
+--------------------------------------------------------------
+
+Como miembros estáticos privados de la clase se ha puesto el tamaño de la ventana *screen_size*, el título del juego *game_title* y la ruta a la imagén del jugador *hero_image_filename*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+__screen_size = (640, 480)
+__game_title = "ShMUp"
+__hero_image_filename = ["shmup", "assets", "images", "hero.png"]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [static_members]: Miembros Estáticos Privados de la Clase *Game*]
+
+En el constructor *'__init__'* se inicia PyGame llamando a *pygame.init()*, se crea la ventana y se le pone nombre como se ha visto anteriormente, y se carga la imagen para el jugador en una *surface*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __init__(self):
+    pygame.init()
+
+    self.__window = pygame.display.set_mode(Game.__screen_size, 0, 32)
+    pygame.display.set_caption(Game.__game_title)
+
+    self.__hero = pygame.image.load(os.path.join(*Game.__hero_image_filename)).convert_alpha()
+
+    self.__running = False
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [init_game]: Constructor de la Clase *Game*]
+
+Run
+--------------------------------------------------------------
+
+En la función *run* que va a hacer de punto de arranque del juego se controla el *main loop*, el bucle infinito que estará siempre en ejecución. Dentro del *main loop* llamará primero a *process_events* para gestionar la cola de eventos, luego a *update* para actualizar el estado del juego, y por último a *render* para pintar un nuevo frame con los cambios realizados. Al salir del *loop* se llama a *quit* para liberar los recursos que se hayan podido adquirir.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def run(self):
+    self.__running = True
+
+    while self.__running:
+        self.__process_events()
+        self.__update()
+        self.__render()
+
+    self.__quit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [run_game]: Método *run* de la Clase *Game*]
+
+Event Loop
+--------------------------------------------------------------
+
+En la función *process_events* se va a gestionar la cola de eventos de PyGame, de la manera vista anteriormente, por ahora sólo la opción de cerrar el juego.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __process_events(self):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            self.__running = False
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [process_events_game]: Método *process_events* de la Clase *Game*]
+
+Update
+--------------------------------------------------------------
+
+La función *update* por ahora está vacía puesto que aún no se ha implementado nada de lógica de juego.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __update(self):
+    pass
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [update_game]: Método *update* de la Clase *Game*]
+
+Render
+--------------------------------------------------------------
+
+La función *render* es la que se encarga de pintar todo el mundo virtual a pantalla. El resultado del pintado del frame anterior se descarta, y por tanto lo primero que se hace es limpiar la pantalla. A continuación se pintan todos los objetos del juego, y a continuación se actualiza la pantalla para mostrarla en el monitor.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __render(self):
+    self.__window.fill((0, 0, 0))
+
+    x, y = pygame.mouse.get_pos()
+    x -= self.__hero.get_width() / 2
+    y -= self.__hero.get_height() / 2
+    self.__window.blit(self.__hero_image, (x, y))
+
+    pygame.display.update()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [render_game]: Método *render* de la Clase *Game*]
+
+Quit
+--------------------------------------------------------------
+
+Por último, el método *quit* se encargará de liberar cualquier recurso que el juego haya adquirido y no vaya a ser necesario. En este caso, simplemente comunicará a PyGame que su trabajo ha terminado.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __quit(self):
+    pygame.quit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [quit_game]: Método *quit* de la Clase *Game*]
+
+Frame Rate
+==============================================================
+
+Profundizando un poco más dentro el *main loop* que está dentro del método *run*, este es el que controla el ciclo de vida del juego. Mientras éste continue iterando, el juego seguirá vivo.
+
+Lo que se hace en cada iteración del loop es, primero procesar los eventos de PyGame, luego actualizar el juego, y por último pintar los resultados a pantalla. A cada iteración del *game loop* se le suele llamar *frame* o *tick*. La medida de cuantas iteraciones del *game loop* se pueden realizar por segundo son los *FPS*, *Frames Per Second* o frames por segundo. A veces, el concepto de *FPS* solo tiene en cuenta tiempos de pintado, pero es común que englobe el tiempo de procesamiento de las entradas y de las actualizaciones de la lógica de juego.
+
+![Figure [res/005_000]: Ciclo de Vida de un Juego](res/005_000.png)
+
+El diagrama Figure [res/005_000] describe perfectamente lo que hace el juego en cada momento. Todo lo que se hace dentro del juego es bastante lineal, todo se ejecuta en el orden que se le dice y la maquina no hace nada que no se le haya pedido explícitamente.
+
+Procesamiento de Eventos a través de los Frames
+--------------------------------------------------------------
+
+Por cada iteración del *loop* de eventos puede llegar un evento distinto, pero al juego que se está desarrollando le interesan sobre todo las pulsaciones de tecla para gestionar la entrada del jugador. Así que se va a delegar ese trabajo a una función específica que pueda gestionar esas pulsaciones y relacionarlas con acciones del jugador.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __process_events(self):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            self.__running = False
+        if event.type == pygame.KEYDOWN:
+            self.__handle_player_input(event.key, True)
+        elif event.type == pygame.KEYUP:
+            self.__handle_player_input(event.key, False)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [process_events]: Método *process_events* Delegando Pulsaciones de Tecla]
+
+Con este método ahora se delega a otra función la gestión espécifica de los eventos de pulsaciones de teclado.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __handle_player_input(self, key, is_pressed):
+    if key == K_UP:
+        self.__is_moving_up = is_pressed
+    elif key == K_DOWN:
+        self.__is_moving_down = is_pressed
+    elif key == K_LEFT:
+        self.__is_moving_left = is_pressed
+    elif key == K_RIGHT:
+        self.__is_moving_right = is_pressed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [handle_player_input]: Método *handle_player_input*]
+
+Esta función activa/desactiva unos flags que indican en que dirección se mueve el jugador.Responde a las pulsaciones de las teclas de cursor para indicar hacia donde debe moverse. Estos flags deben inicializarse en el constructor a *False*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+self.__is_moving_up = False
+self.__is_moving_down = False
+self.__is_moving_left = False
+self.__is_moving_right = False
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [moving_flags]: Flags de Movimiento Iniciados a *False*]
+
+Ahora que se tiene una forma de relacionar una pulsación de una tecla con una acción específica del jugador, se sabe cuando hay que moverse arriba, abajo, izquierda o derecha. En este caso ya se puede empezar a escribir código en el método *update* del *main_loop*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __update(self):
+    movement = pygame.math.Vector2(0.0, 0.0)
+
+    if self.__is_moving_up:
+        movement.y -= 0.1
+    if self.__is_moving_down:
+        movement.y += 0.1
+    if self.__is_moving_left:
+        movement.x -= 0.1
+    if self.__is_moving_right:
+        movement.x += 0.1
+
+    self.__hero_position += movement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [update]: Método *update* Moviendo al Jugador]
+
+Se verifica el estado de cada uno de los cuatro *flags*, y usando un *Vector2* se crea un vector de movimiento hacia donde se va a mover el jugador. No se usa una estructura *if elif* para dar cabida a que se pueda mover en varias direcciones a la vez, como las diagonales, y además se gestiona el caso de direcciones opuestas que se anularían.
+
+Esto supone que hay que guardarse la posición del jugador en algún sitio, por ahora en el constructor de la clase se inicializa.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+self.__hero_position = pygame.math.Vector2(self.__window.get_width()/2 - self.__hero.get_width()/2, self.__window.get_height()/2 - self.__hero.get_height()/2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [player_position]: Posición del Jugador]
+
+Y a la hora de pintar el estado del juego se accede a esta variable para pintar la imagen del jugador en su posición actual.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+self.__window.blit(self.__hero, self.__hero_position.xy)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [player_render]: Pintar el Jugador]
+
+Álgebra Vectorial
+--------------------------------------------------------------
+
+Los vectores son una parte importante del álgebra. Tienen muchas reglas y definiciones que no se van a tratar aquí. Sin embargo, son de uso muy extendido en videojuegos. En el módulo *math* de PyGame se encuentran las clases *Vector2* y *Vector3* para trabajar con véctores de 2 y 3 dimensiones. La documentación completa de estas clases se puede consultar en la [documentación oficial](https://www.pygame.org/docs/ref/math.html)
+
+Una coordenada en un sistema cartesiano bidimensional necesita dos componentes *x* e *y*. Aunque los píxels en la pantalla sean número enteros es deseable que todas las posiciones, tamaños,... que se manejen dentro del juego se hagan con números reales para obtener mayor precisión en los cálculos y cuando se vaya a pintar se usarán los redondeos oportunos. Los objetos *Vector* que PyGame ofrece tienen las componentes necesarias encapsuladas y hacen que sea mucho más sencillo trabajar con posiciones, velocidades,... al poder hacer operaciones directamente sobre ellos y delegar en esas clases el trabajo por componentes.
+
+Estos vectores se usaran no solo para definir posiciones, si no también orientaciones. Un vector es una estructura ideal para almacenar una coordenada bidimensional, en position absoluta o relativa, expresar una dirección a seguir o hacia donde disparar una bala. Si se habla de direcciones hay que trabajar con el concepto de normalización, vector unitario,... Estas operaciones aplican solo en direcciones, no en posiciones. Un vector normalizado es aquel que tiene longitud 1, o vector unitario, y el vector expresa la misma dirección que antes de ser normalizado.
+
+En el caso del ejemplo anterior, un vector llamado *movement* expresa un movimiento desde el origen del sistema de coordenadas actual. Ese origen es la posición del jugador.
+
+Movimiento Independiente de los Frames
+--------------------------------------------------------------
+
+Ejecutando el código anterior se puede observar que la imagen del jugador se mueve al pulsar las teclas, pero este movimiento se produce porque se le suma una cantidad fija al vector de movimiento en cada iteración del *main_loop*. Se ha definido el movimiento de una manera muy simplista, si el ordenador ejecuta la función *update* todo lo rápido que puede posiblemente llame a esta función varios cientos de veces por segundo, si se mueve la imagen del jugador 1 píxel en cada frame, esta velocidad es dependiente de cuantas veces se ejecute el *main_loop* por segundo, es decir, es dependiente del *frame rate*. Si este juego se ejecutara en otro ordenador con unas prestaciones diferentes este *frame rate* será distinto, y por tanto, también la velocidad a la que se mueve el jugador. Eso produce una experiencia de juego distinta en cada máquina distinta donde se ejecuta el juego, o incluso en distintos momentos en el mismo equipo en función de su carga de trabajo, y no es deseable.
+
+Hay que conseguir que la velocidad a la que se mueve el jugador cambie en función del tiempo que cuesta cada frame. Hay una simple fórmula que puede funcionar.
+
+\begin{equation}
+distancia = velocidad * tiempo
+\end{equation}
+
+Con ella se puede calcular la velocidad relevante para cada frame, de manera que el jugador se mueva exactamente la distancia que se desea a lo largo de un segundo, sin importar la velocidad de la maquina donde se ejecuta.
+
+Para ello se modifica el método *update* para que reciba como parámetro el tiempo que ha transcurrido desde el último frame, y con ello actualice la posición del jugador multiplicando este tiempo por la velocidad del jugador, calculando la distancia que se quiere mover en cada frame.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __update(self, delta_time):
+    movement = pygame.math.Vector2(0.0, 0.0)
+
+    if self.__is_moving_up:
+        movement.y -= Game.__hero_speed
+    if self.__is_moving_down:
+        movement.y += Game.__hero_speed
+    if self.__is_moving_left:
+        movement.x -= Game.__hero_speed
+    if self.__is_moving_right:
+        movement.x += Game.__hero_speed
+
+    self.__hero_position += movement * delta_time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [update_delta]: Método *update* Usando Tiempo Delta]
+
+Para calcular este tiempo que ha transcurrido entre dos frames se pueden usar las funciones del módulo *time* de PyGame. En concreto el método *get_ticks*, que devuelve el número de milisegundos que han transcurrido desde que PyGame se inició. Se guarda en una variable esos *ticks* en un frame, y en el siguiente frame se comparan cuantos milisegundos han pasado con respecto al actual *tick*. Dentro del *main_loop* hay que guardarse los *ticks* antes de entrar al *main_loop*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def run(self):
+    self.__running = True
+
+    last_time = pygame.time.get_ticks()
+    while self.__running:
+        delta_time, last_time = self.__calc_delta_time(last_time)
+
+        self.__process_events()
+        self.__update(delta_time)
+        self.__render()
+
+    self.__quit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [main_loop_delta]: Método *main_loop* Usando Tiempo Delta]
+
+Y luego en cada iteración se llama al método *calc_delta_time* para calcular el *delta time* y actualizar ese valor para la siguiente iteración.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __calc_delta_time(self, last):
+    current = pygame.time.get_ticks()
+    delta = current - last
+    return delta, current
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [calc_delta]: Método *calc_delta_time* Para Calcular el Tiempo Delta]
+
+Pasos de Tiempo Fijos
+--------------------------------------------------------------
+
+La solución anterior es válida para la mayoría de los casos. Pero no es una solución perfecta, puesto que se pueden tener problemas en ciertos escenarios donde los tiempos *delta* varían mucho. El código puede ser complicado de depurar, puesto que es imposible conseguir resultados 100% predecibles, puesto que cada frame es único, y no se puede garantizar que el tiempo *delta* se mantenga estable.
+
+Por ejemplo, un frame puede tardar en producirse el triple de tiempo de lo que tarda un frame de media. Esto puede llevar a errores dentro de la lógica de juego, por ejemplo, si un jugador se mueve de golpe el triple de la distancia habitual y atraviesa un muro contra el cual colisionaría en circunstancias normales. Por eso los motores de físicas esperan que el tiempo *delta* sea fijo. En Figure [res/005_001] se observa que el objeto de juego con una actualización normal colisionaría con la pared al calcular su nueva posición, en cambio, en una situación con *lag*, donde el tiempo *delta* sea superior al habitual, al calcular su nueva posición el objeto ha atravesado la pared y por tanto produciendo un error en la lógica de juego. Este efecto se llama *tunneling*.
+
+![Figure [res/005_001]: Tunneling](res/005_001.png)
+
+Para evitar estos problemas se usa la técnica llamada *fixed time steps*, o pasos de tiempo fijos. De manera que se garantice que bajo cualquier circunstancia siempre se le da el mismo tiempo *delta* al método *update*, y por tanto, se actualiza la lógica de juego a una velocidad constante y predecible. Y el pintado se ejecutará tan rápido como sea posible.
+
+Se decide antes de nada a cuantos frames por segundo se quiere ejecutar el juego y se calcula cuanto tiempo se quiere dedicar a cada frame.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+__fps = 60
+__time_per_frame = 1000.0 / __fps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [time_per_frame]: Cálculo del Tiempo para cada Frame]
+
+Se acumula cuanto tiempo ha pasado en una variable *time_since_last_update*. Cuando se ha pasado la cantidad de tiempo requerida para un frame, se le resta la longitud deseada para este frame *time_per_frame* y se actualiza el juego. Se hace esto hasta que se está por debajo del tiempo requerido. De esta manera se soluciona el problema de los tiempos *delta* variables, se garantiza que se ejecutan el mismo número de frames.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def run(self):
+    self.__running = True
+
+    last_time = pygame.time.get_ticks()
+    time_since_last_update = 0
+    while self.__running:
+        delta_time, last_time = self.__calc_delta_time(last_time)
+        time_since_last_update += delta_time
+        while time_since_last_update > Game.__time_per_frame:
+            time_since_last_update -= Game.__time_per_frame
+
+            self.__process_events()
+            self.__update(Game.__time_per_frame)
+
+        self.__render()
+
+    self.__quit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [fixed_time_step]: Método *main_loop* con *fixed time step*]
+
+Se tienen ahora dos *loops*, el externo es el *main loop*, y llama al pintado. El interno recoge las entradas del usuario, y ejecuta la lógica de juego, y este loop se ejecuta a un ritmo constante. Si el pintado es lento, puede suceder que la lógica de juego se llame varias veces antes de cada llamada a pintado. En ese caso el juego calculará algunas iteraciones de lógica que no acabarán siendo pintadas, pero el juego no se ralentizará. Por otro lado, un pintado muy rápido causará que se llame al método de pintado varias veces sin una actualización de la lógica entre medias. Pintar el mismo estado varias veces no cambia nada en la pantalla, pero permite algunas técnicas avanzadas como interpolaciones entre dos estados para suavizar el flujo del juego.
+
+Otras Técnicas
+--------------------------------------------------------------
+
+PyGame tiene dos funciones *wait* y *delay* para interrumpir la ejecución un tiempo determinado, lo cual le da al procesador una oportunidad de trabajar en otras tareas. Si se detecta en algún punto del juego que se puede liberar tiempo de procesado es interesante usarlo, sobre todo en dispositivos móviles, donde el uso razonable de la batería es importante.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.time.wait(50)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [time_delay]: Pausa el Juego durante 50 Milisegundos]
+
+Otro parámetro importante es el llamado *v-sync*, o sincronización vertical. Esto adapta las llamadas al método *update* para sincronizarlas con la tasa de refresco del monitor, que suele ser de 60Hz. Se puede pasar como parámetro al método *set_mode* al crear la ventana, pero solo funciona para ventanas de *OpenGL*, y es muy dependiente del hardware y la configuración de los drivers del sistema, así que no es muy aconsejable usarla.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+self.__window = pygame.display.set_mode((640, 480), OPENGL, 32, vsync=1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [ventana_vsync]: Ventana con *vsync*]
+
+Frames Por Segundo
+--------------------------------------------------------------
+
+La forma habitual de medir el rendimiento de un juego, o la velocidad de refresco suele venir referida en *Frames Por Segundo*, *FPS*. Si se usa el método descrito anteriormente para gestionar el *main loop*, se está forzando a una distinta velocidad de refresco a la lógica de juego y al pintado del mismo. Mientras se está desarrollando el juego es habitual poder visualizar estas velocidades para verificar que el juego se mueve dentro de los parámetros deseados.
+
+Se puede crear una clase para ello, llamada *FPSStats*, que se encargue de gestionar las dos diferentes velocidades y pueda pintar en pantalla dichas velocidades para visualizarlas mientras se juega, y poder detectar posibles atascos o bajadas de rendimiento.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+class FPSStats:
+
+    def __init__(self, font):
+        self.__font = font
+        self.__update_time = 0
+        self.__render_frames = 0
+        self.__logic_frames = 0
+        self.__set_fps_surface()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [fpsstats_init]: Constructor de la Clase FPSStats]
+
+Esta clase en el constructor recibirá como parámetro la fuente con la que se quiere pintar el texto con las velocidades. Y creará en su instancia una surface donde pintar el texto, y una serie de variables para gestionar los tiempos. En *render_frames* y *logic_frames* se irán acumulando las veces que se van a ejecutar los dos bloques en cada segundo, mientras que en *update_time* se va a guardar el tiempo transcurrido desde la última vez que se calcularon las velocidades.
+
+Publica un par de funciones para que se actualice cada vez que se llama al render o al cálculo de la lógica en el *main_loop*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def update_render(self):
+    self.__render_frames += 1
+
+def update_logic(self, delta):
+    self.__update_time += delta
+    self.__logic_frames += 1
+
+    if self.__update_time >= 1000:
+        self.__set_fps_surface()
+
+        self.__update_time -= 1000
+        self.__logic_frames = 0
+        self.__render_frames = 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [fpsstats_update]: Actualiza los Datos]
+
+El método *update_render* se llamaría cada vez que se invoca a *render* desde el *main loop*, y ahí se acumularía el número de llamadas. De manera similar, el método *update_logic* será invocado cada vez que se actualiza la lógica desde el *main loop*, pero además de acumular el número de llamadas, si se sobrepasa un tiempo determinado (en este caso 1 segundo), entonces se imprimen los datos en la *surface*, y se reinician los contadores.
+
+En este caso, la velocidad de ambos sistemas (lógica y render), se miden por veces que se llaman por segundo, lo que concuerda con el termino de *frames por segundo*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def __set_fps_surface(self):
+    self.__fps = self.__font.render(f"Logic {self.__logic_frames} fps - Render {self.__render_frames} fps", True, (255,255,255), (0,0,0))
+
+def render_stats(self, surface):
+    surface.blit(self.__fps, (0,0))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [fpsstats_render]: Renderiza los Datos]
+
+El método *set_fps_surface* pinta sobre la surface interna los datos de *fps*, y el método *render_stats* pinta esa *surface* sobre la que recibe, en este caso para permitir al método *render* del *main loop* que se muestren dichos datos en el juego.
+
+Clase Config
+==============================================================
+
+Cada vez que se introduce nueva funcionalidad en el juego, se suelen crear una serie de parámetros de ajuste para controlar dicha funcionalidad. En lugar de ir dejando esos parámetros repartidos a lo largo del código, se puede escribir una clase *Config* que los almacene en un sólo sitio. De esta manera, se tiene en un sólo sitio centralizado todos los parámetros de configuración del juego, y cambiar algunos comportamientos o la apariencia del juego es sencillo, solo hay que cambiar algunos valores en dicha clase.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+class Config:
+
+    screen_size = (640, 480)
+    game_title = "ShMUp"
+    background_color = (0, 0, 0)
+
+    def __init__(self):
+        pass
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [config_class]: Clase *Config*]
+
+Se pueden poner esos parámetros de configuración como miembros de clase estáticos, y que puedan ser accesibles públicamente desde cualquier punto del código.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+from shmup.config import Config
+
+self.__window = pygame.display.set_mode(Config.screen_size, 0, 32)
+pygame.display.set_caption(Config.game_title)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [config_use]: Usar la clase *Config*]
+
+Desde la clase *Game* se puede acceder a la clase *Config* y acceder a algunos parámetros, como por ejemplo, el tamaño de la ventana o el nombre del juego. De manera general, cualquier valor que se use durante el desarrollo del juego que pueda ser parametrizado debería acabar en la clase *Config*, y no declarado específicamente en el código que lo usa.
+
+Render
+==============================================================
+
+Los videojuegos son muy visuales por naturaleza, y gran parte del trabajo de los desarrolladores consiste en manipular los gráficos y puliendo los elementos visuales crear la mejor experiencia de juego para el usuario.
+
+Píxels
+--------------------------------------------------------------
+
+Si se mira a un monitor de ordenador de cerca, se puede observar que están compuestas de filas y columnas de puntos coloreados. Estos puntos están tan cerca unos de otros que cuando se mira a la pantalla desde una distancia forman una sola imagen. Uno de esos puntos en la pantalla se llama elemento de imagen o píxel.
+
+Colores
+--------------------------------------------------------------
+
+Es posible que cualquier programador esté familiarizado con como se crean o usan los colores con algún editor de imágenes como Paint o GIMP. Si se tiene un bote de pintura azul y otro amarillo, se pueden crear tonos de verde mezclando ambos. De hecho, se puede crear cualquier color mezclando los colores primarios rojo, amarillo y azul, en distintas proporciones. Los colores en el ordenador funcionan de manera muy similar, pero los colores primarios son el rojo, verde y azul.
+
+Para ver un color, la luz del sol o una bombilla tiene que rebotar en alguna superficie y atravesar la lente en el ojo del observador. La luz directa puede parecer blanca, pero en realidad, contiene todos los colores del arco iris mezclados juntos. Cuando la luz alcanza una superficie, algunos de los colores son absorbidos por dicha superficie y el resto son reflejados. Es esta luz reflejada la que llega al ojo y se percibe como color. Cuando los colores se crean de esta manera se llama *color subtraction*. Las pantallas de los ordenadores funcionan de manera distinta, en lugar de reflejar una luz, producen una luz propia y crean los colores juntando rojo, verde y azul, proceso llamado *color addition*. Con este sistema, en Python se pueden crear 16.7 millones de colores distintos.
+
+### Colores en PyGame
+
+Hasta ahora ya se ha usado el color, cuando se necesitaba, se pasaba una tupla con tres números enteros, representando cada componente del color en orden, rojo, verde y azul. El valor de cada componente debe estar en un rango entre 0 y 255, donde 0 significa que ese componente no contribuye en nada al color final, y 255 donde su intensidad es máxima.
+
+Color | Rojo | Verde | Azul | Tupla
+------|------|-------|------|--------
+Negro | 0 | 0 | 0 | (0,0,0)
+Azul | 0 | 0 | 255 | (0,0,255)
+Verde | 0 | 255 | 0 | (0,255,0)
+Cyan | 0 | 255 | 255 | (0,255,255)
+Rojo | 255 | 0 | 0 | (255,0,0)
+Magenta | 255 | 0 | 255 | (255,0,255)
+Amarillo | 255 | 255 | 0 | (255,255,0)
+Blanco | 255 | 255 | 255 | (255,255,255)
+[Table [color_tables]: Tabla de Colores]
+
+Aunque parezca un sistema limitado, con un poco de práctica se puede llegar a predecir el color resultante simplemente mirando a los números de las combinaciones finales. Para determinar un color de manera visual se puede usar cualquier *color picker* de alguna aplicación de dibujo como Paint o cualquier otra aplicación, o incluso se puede desarrollar uno propio con Python.
+
+Se van a usar tres rectángulos en la parte superior de la pantalla, donde en cada uno de ellos va a haber un degradado de colores para cada color primario, el usuario moverá un círculo en cada uno de ellos para elegir la intensidad del color final, el cual se pintará en un recuadro en la parte inferior de la pantalla.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def create_gradients(width, height):
+    red_scale_surface = pygame.surface.Surface((width, height))
+    green_scale_surface = pygame.surface.Surface((width, height))
+    blue_scale_surface = pygame.surface.Surface((width, height))
+
+    color_step = 255. / float(width)
+    current_step = 0.
+    for x in range(width):
+        red = (int(current_step), 0, 0)
+        green = (0, int(current_step), 0)
+        blue = (0, 0, int(current_step))
+        current_step += color_step
+
+        line_rect = Rect(x, 0, 1, height)
+        pygame.draw.rect(red_scale_surface, red, line_rect)
+        pygame.draw.rect(green_scale_surface, green, line_rect)
+        pygame.draw.rect(blue_scale_surface, blue, line_rect)
+    return red_scale_surface, green_scale_surface, blue_scale_surface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [create_gradient]: Crear los Tres Gradientes, Uno para cada Color]
+
+Primero se crean tres *surfaces*, una para cada color primario, se calcula el *step* de color por anchura, es decir, por cada píxel de anchura cuanto va a cambiar el color basado en 255. Y para cada píxel en anchura, se calcula el color para cada gradiente primario, y por último se pinta una linea con ese color intermedio en cada una de las tres superficies, de esta manera se pintan los tres gradientes poco a poco.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+slider_height = 80
+red_scale, green_scale, blue_scale = create_gradients(screen_size[0], slider_height)
+
+color = [127, 127, 127]
+color_step = 255. / float(screen_size[0])
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [call_create_gradient]: Llamar a Crear los Tres Gradientes]
+
+Se determina la altura de cada gradiente y se llama a la función anterior con esta altura y con la anchura de la pantalla para crear los tres gradientes. Se prepara la variable para contener al color que se va a crear, inicialmente un gris con los tres componentes a mitad intensidad, y una vez más, el *step* de cuanta cantidad de color cambia por cada píxel de anchura.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.blit(red_gradient, (0, 0))
+screen.blit(green_gradient, (0, slider_height))
+screen.blit(blue_gradient, (0, slider_height * 2))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [paint_gradient]: Pintar los Tres Gradientes]
+
+Dentro del *main loop*, después de borrar la pantalla se pintan los tres gradientes, cada uno en su posición correspondiente.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+x, y = pygame.mouse.get_pos()
+
+if pygame.mouse.get_pressed()[0]:
+    for component in range(3):
+        if y > component * slider_height and y < (component+1) * slider_height:
+            color[component] = int(x * color_step)
+            pygame.display.set_caption("PyGame Color Test - "+str(tuple(color)))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [get_color]: Conseguir el Color Seleccionado]
+
+Se consulta la posición del ratón, y si está el botón izquierdo pulsado se verifica para cada componente de color, si se ha pulsado sobre el correspondiente gradiente se calcula el componente del nuevo color en función de la *x* donde se ha pulsado.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+for component in range(3):
+    pos = ( int(color[component] / color_step), component * slider_height + slider_height / 2)
+    pygame.draw.circle(screen, (255, 255, 255), pos, 20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_slider]: Pintar Sliders]
+
+Para cada componente, se pinta un círculo blanco que hará las veces de *slider* para mostrar cada componente en que posición *x* está para el color seleccionado.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.rect(screen, tuple(color), (0, slider_height * 3, screen_size[0], slider_height* 3))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_color]: Pintar Rectángulo con Color Final]
+
+Y por último se pinta un rectángulo en la parte inferior de la pantalla con el color seleccionado.
+
+### Escalando Colores
+
+Para hacer un color más oscuro, simplemente hay que multiplicar cada uno de los componentes por un valor entre 0 y 1. Si se coge un color naranja (221, 99, 20) y se multiplica cada valor por 0.5, reduciendo su intensidad a la mitad, se obtiene (110.5, 49.5, 10), redondeando a enteros (110, 49, 10), lo cual deja un color naranja oscuro. Es factible crear una función para escalar los colores.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def scale_color(color, scale):
+    red, green, blue = color
+    red = int(red * scale)
+    green = int(green * scale)
+    blue = int(blue * scale)
+    return red, green, blue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [scale_color]: Función para Escalar Colores]
+
+Multiplicar cada componente por un valor entre 0 y 1, hace el color más oscuro, pero si se multiplica por un valor mayor que 1 se hace más brillante. Si se coge el naranja anterior (221, 99, 20) y se multiplica por 2 para doblar su brillo, da como resultado (442, 198, 20). Se ve claramente que existe un problema con el componente rojo, cada componente debe ser un valor entre 0 y 255. Si se usa este valor directamente en PyGame, este lanzará un error, así que es importante arreglar esto antes de pintar nada. Todo lo que se puede hacer es verificar cada componente y dejar como valor máximo 255. Este proceso se llama saturar el color.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def saturate_color(color):
+    red, green, blue = color
+    red = min(red, 255)
+    green = min(green, 255)
+    blue = min(blue, 255)
+    return red, green, blue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [saturate_color]: Función para Saturar Colores]
+
+Se usa la función *min* que devuelve el menor de dos valores, si el componente está en el rango correcto no se cambia, pero si está por encima de 255, se queda en 255.
+
+Cuando los componentes de un color se saturan en 255, el color será más brillante, pero el tono puede que no sea exactamente el mismo. Y si se sigue escalando un color, puede incluso llegar a (255, 255, 255), que es blanco brillante. Es recomendable siempre elegir el tono de color más brillante y escalarlo hacia oscuro, usando un factor de escala menor a 1, para evitar este tipo de problemas.
+
+Si se usan factores de escala menores a cero produce componentes de color negativos, lo cual no tiene sentido, puesto que no se puede tener menos de cero de rojo, verde o azul para un color.
+
+### Mezclando Colores
+
+Otra efecto que se puede hacer con los colores es mezclar un color gradualmente con otro. Si se tiene un personaje en un juego cuya piel es normalmente verde, pero se acerca a un emisor de luz naranja muy potente, se quiere que el color de su piel se mezcle con el color de la luz en función de su distancia, y calcular los colores intermedios para hacer la transición suave.
+
+Se puede usar la interpolación lineal para esto, que en realidad lo que hace es determinar un valor intermedio moviéndose entre dos valores en una linea recta. Es conocido como *lerp*, como acrónimo de *linear interpolation*. Para hacer un *lerp* entre dos valores, se calcula la diferencia entre el segundo y el primero, y se multiplica por un factor entre 0 y 1, y luego se suma al primer valor. Un factor de 0, devuelve el primer valor, mientras que un factor de 1, devuelve el segundo valor, un factor de 0.5 devuelve un valor justo a mitad camino entre ambos. Cualquier otro factor resultará en un valor proporcional entre los dos puntos.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def lerp(value1, value2, factor):
+    return value1 + (value2 - value1) * factor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [lerp]: Función de Interpolación Lineal]
+
+Para hacer un *lerp* entre colores, solo hay que hacerlo para cada componente para producir un nuevo color. Si se varía el factor en función del tiempo, se consigue una transición de color suave.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+def blend_color(color1, color2, blend_factor):
+    red1, green1, blue1 = color1
+    red2, green2, blue2 = color2
+    red = lerp(red1, red2, blend_factor)
+    green = lerp(green1, green2, blend_factor)
+    blue = lerp(blue1, blue2, blend_factor)
+    return int(red), int(green), int(blue)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [color_blend]: Mezclado de Dos Colores]
+
+Usando la función *lerp*, se mezclan dos colores componente a componente con un factor de mezclado.
+
+Imágenes
+--------------------------------------------------------------
+
+Las imágenes son parte esencial de la mayoría de juegos. En un juego 2D, las imágenes pueden representar paisajes, texto, personajes, oponentes,... En un juego 3D, las imágenes suelen usarse como texturas para los módelos 3D en las escenas.
+
+Los ordenadores almacenan las imágenes como retículas de color. La manera en la que esos colores están almacenados depende de cuantos se necesitan para reproducir la imagen. Las fotografías necesitan un rango completo de colores, mientras que algunos diagramas en blanco y negro se almacenaran de distinta manera. Algunas imágenes también almacenarán información extra para cada píxel. Además de los tres componentes habituales rojo, verde y azul, también puede existir un componente alpha. El valor alpha de un color se suele usar para representar la transparencia, de manera que al pintarse sobre otra imagen, partes del fondo puedan verse a través.
+
+Si se realiza una fotografía con una cámara digital o se pinta algún software gráfico, probablemente no tenga canal alpha. Añadir un canal alpha a una imagen generalmente supone trabajar en un software gráfico, como Photoshop, GIMP,...
+
+### Almacenamiento de Imágenes
+
+Hay muchas maneras distintas de guardar una imagen en disco. A lo largo de los años se han desarrollado multitud de formatos de fichero para imágenes, cada uno con sus ventajas e inconvenientes. Pero unos pocos de ellos han emergido como lo más usados, *JPG* y *PNG* principalmente. Ambos están ampliamente soportados y probablemente sean suficiente para los casos de uso en videojuegos.
+
+- *JPEG*, *Joint Photographic Expert Group* - Los ficheros en *JPG* suelen tener la extensión *.jpg* o *.jpeg*. Usan un proceso de compresión *lossy*, que es bastante bueno a la hora de reducir el tamaño del fichero. El inconveniente de esta compresión es que también puede reducir la calidad de la imagen, pero habitualmente no es apreciable a simple vista. La cantidad de compresión se puede ajustar para encontrar un balance entre calidad visual y tamaño de fichero. Suele ser buen formato para fotos, pero es malo para imágenes con bordes duros, como fuentes o diagramas, puesto que la compresión tienen a distorsionarlos.
+
+- *PNG*, *Portable Network Graphics* - Este formato es problamente uno de los más versátiles, puesto que puede almacenar muchos tipos de imágenes distintos y aún así comprimir lo suficientemente bien. También soporta canales alpha, lo cual es un factor importante. La compresión que usa es *lossless*, lo cual significa que las imágenes almacenadas en ficheros *PNG* se pueden reconstruir para ser exactamente iguales a las originales. El incoveniente de esto es que pese a tener un buen ratio de compresión, no sea tan bueno como el de *JPG*.
+
+Además de estos dos formatos, PyGame también soporta *GIF* (sin animación), *BMP*, *PCX*, *TGA* (sin comprimir), *TIF*, *LBM*, *PBM*, *PGM*, *PPM* y *XPM*. Como regla general, se puede usar *JPEG* para imágenes de gran tamaño con muchas variaciones de color, para el resto de casos, *PNG*.
+
+*Surfaces*
+--------------------------------------------------------------
+
+Cargar imágenes en PyGame se realiza con un simple método, *pygame.image.load*, recibe el nombre del fichero de la imagen a cargar y devuelve un objeto *surface*, que es un contenedor para una imagen. Las *surfaces* pueden representar muchos tipos distintos de imágenes, pero PyGame oculta esos detalles para tratarlos de la misma manera todos. Una vez se tiene una *surface* en memoria, se puede pintar en ella, transformarla, o copiar sobre otra *surface* para componer una imagen compleja. Incluso la pantalla se representa como un objeto *Surface*. La llamada inicial a *pygame.display.set_mode* devuelve una *surface* que representa la pantalla o ventana.
+
+### Crear *Surfaces*
+
+Llamar al método *pygame.image.load* es una manera de crear una *surface* a partir de un fichero, y crea dicha *surface* con los colores y dimensiones de la imagen en el fichero. Pero también se pueden crear *surfaces* nuevas de cualquier tamaño que se necesite, siempre y cuando haya suficiente memoria disponible para almacenarla. Para crear una *surface* nueva, se llama al constructor *pygame.Surface* con una tupla con las dimensiones solicitadas.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+blank_surface = pygame.Surface((256, 256))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [create_surface]: Crear *Surface* de 256 x 256]
+
+Si ningún otro parámetro, esto crea una *surface* con el mismo número de colores que la pantalla. Esto es habitualmente lo deseado, puesto que es más rápido copiar imágenes cuando tienen la misma profundidad de colores.
+
+También hay un parámetro *depth* al crear una *surface* para indicarle la profundidad a la cual tiene que crear dicha *surface*. Es similar al parámetro *depth* de la función *pygame.display.set_mode*, y define el número máximo de colores de la *surface*. Generalmente es mejor no usar este parámetro (o dejarlo a 0), para que PyGame use un *depth* que coincida con la pantalla, pero si quiere canal alpha en la *surface*, se debería usar una profundidad de 32 bits.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+blank_surface = pygame.Surface((256, 256), depth = 32)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [create_surface_alpha]: Crear *Surface* de 256 x 256 y 32 bits con Canal Alpha]
+
+### Convertir *Surfaces*
+
+Cuando se usan objetos *Surface*, no hay que preocuparse por como se almacena esa información en memoria, puesto que PyGame lo maneja internamente. La mayoría de las veces el formato de la imagen no es algo de lo que preocuparse, puesto que el código funcionará independientemente de ese formato. El único problema de esa conversión automática es que PyGame tendrá que realizar más trabajo por debajo si tiene que usar imágenes con distintos formatos, y eso potencialmente puede ir en detrimento del rendimiento del juego. La solución es convertir todas las imágenes al mismo formato, y para eso, los objetos *Surface* tienen un método *convert*.
+
+Si se llama a *convert* sin ningún parámetro, la *surface* se convertirá al mismo formato de la *surface* de la pantalla. Esto es útil, puesto que suele ser más rápido copiar *surfaces* cuando el origen y el destino tienen el mismo tipo, y la mayoría de las imágenes acaban siendo copiadas a la pantalla en algún momento. Es buena idea acompañar con *.convert()* a todas las llamadas a *pygame.image.load*, para asegurarse que las imágenes estén en el formato más rápido para la pantalla.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+hero = pygame.image.load(hero_image_filename).convert()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [convert_surface]: Convertir *Surface* al Cargarla]
+
+La excepción es cuando la imagen tiene canal alpha, puesto que *convert* puede descartar dicho canal. Para esos casos, el obejto *Surface* tiene el método *convert_alpha*, que convierte la imagen a un formato rápido, pero preserva la información del canal alpha de la imagen.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+hero = pygame.image.load(hero_image_filename).convert_alpha()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [convert_alpha_surface]: Convertir *Surface* al Cargarla con Canal Alpha]
+
+Tanto el método *convert* como *convert_alpha* pueden recibir otro *surface* como parámetro, en ese caso la *surface* se convertirá al mismo formato que la *surface* del parámetro.
+
+### Objetos Rectángulo
+
+En PyGame muchas veces se piden rectángulos para definir que parte de la pantalla se verá afectada por una llamada a alguna función. Por ejemplo, se puede restringir a PyGame a que solo pinte sobre un área rectangular de la pantalla asignando un rectángulo de *clipping*. Se puede definir un rectángulo usando una tupla que contiene cuatro valores, la coordenada *x* e *y* de la esquina superior izquierda, seguido del ancho y alto del rectángulo. Alternativamente, se puede usar una tupla con las coordenadas *x* e *y*, y luego otra tupla con el ancho y alto. Se puede usar cualquiera de los dos métodos, en función de cual sea más cómodo.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+my_rect1 = (100, 100, 200, 150)
+my_rect2 = ((100, 100), (200, 150))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [rect_dimensions]: Dimensiones de Rectángulos]
+
+Además de definir rectángulos, PyGame tiene una clase *Rect* que almacena esa misma información pero contiene una serie de métodos para trabajar más cómodamente con ellos. Los objetos *Rect* son usados tan frecuentemente que están incluidos dentro de *pygame.locals*.
+
+Para construir un objeto *Rect* se usan los mismos parámetros que para una tupla de rectángulo vistos anteriormente.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+from pygame import rect
+my_rect1 = Rect(100, 100, 200, 150)
+my_rect2 = Rect((100, 100), (200, 150))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [rect_object]: Objetos *Rect*]
+
+Una ves se tienen objetos *Rect*, se puede ajustar su posición o tamaño, detectar si un punto está dentro o fuera, o encontrar donde intersectan con otros rectángulos. Más detalles en la [documentación](https://www.pygame.org/docs/ref/rect.html)
+
+### *Clipping*
+
+A menudo cuando se está construyendo la imagen para la pantalla del juego, se quiere pintar solo una porción de la misma. Por ejemplo, en un juego de estrategía, se puede tener en la parte superior un mapa desplazable y en la parte inferior un panel que muestra información sobre las unidades. Pero cuando se empiezán a pintar las imágenes de las unidades a la pantalla, no se quiere que se pinten sobre el panel de información. Para solucionar este problema, las *surfaces* tienen un área de *clipping*, que es un rectángulo que define sobre que parte de la pantalla se puede pintar. Para determinar el área de *clipping*, se puede usar el método *set_clip* de un objeto *Surface* usando un objeto de tipo *Rect*. También se puede obtener el área actual con la función *get_clip*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.set_clip(0, 0, 640, 300)
+draw_map()
+screen.set_clip(0, 300, 640, 180)
+draw_panel()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [clipping]: *Clipping* sobre la Pantalla]
+
+En este ejemplo, la primera llamada determina un área superior de *clipping* donde se producirá el primer pintado del mapa jugable, la segunda llamada mueve ese área a la parte inferior para pintar el panel.
+
+### *Subsurfaces*
+
+Una *subsurface* es una *surface* dentro de otra *surface*. Cunado se pinta sobre una *subsurface*, también se pinta sobre su *surface* padre. Un uso de las *subsurfaces* es pintar fuentes gráficas. El módulo *font* genera fuentes a un sólo color, pero a menudo, los juegos necesitan texto en pantalla mucho más rico en detalle gráfico. Se puede generar una imagen para cada letra, pero es más sencillo generar una sola imagen con todas las letras en ella, y crear 28 *subsurfaces* para cada letra cuando se carga la imagen.
+
+Para crear una *subsurface*, se llama al método *subsurface* de un objeto *Surface*, que recibe como parámetro un rectángulo que define la porción del padre que cubrirá. Este método devuelve un nuevo objeto *Surface* que tiene el mismo formato que el padre.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+font_image = pygame.image.load("bitmap_font.png").convert_alpha()
+letters = []
+letters["a"] = font_image.subsurface((0,0), (80,80))
+letters["b"] = font_image.subsurface((80,0), (80,80))
+...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [subsurfaces]: *Subsurface* para cada Letra]
+
+El ejemplo, carga una imagen de una fuente de mapa de bits, y va creando *subsurfaces* para cada letra y almacenándolas en una lista para su posterior uso.
+
+Cuando se trabaja con *subsurfaces* es importante recordar que tienen su propio sistema de coordenadas, es decir, el punto (0,0) en una subsurface es siempre su esquina superior izquierda, sin importar donde queda esa coordenada dentro del padre.
+
+### Rellenar *Surfaces*
+
+Cuando se crea una imagen en la pantalla, debería cubrir toda la pantalla completa, en caso contrario, partes del frame anterior se podrían ver. Si no se pinta sobre cada uno de los píxels, se puede observar un efecto no deseable cuando se intenta animar algo. La manera más sencilla de evitar esto, es borrar la pantalla con una llamada al método *fill* de los objetos *Surface*, que recibe un color.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.fill((0, 0, 0))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [screen_fill]: Rellenado de imagen con color Negro Solido]
+
+La función *fill* tambien puede recibir un rectángulo opcional que define sobre que área aplica el relleno, lo que se puede usar para pintar rectángulos sólidos.
+
+Si se pinta sobre la pantalla completa por otros medios, se puede obviar la llamada a *fill*.
+
+### Asignando Píxels en *Surfaces*
+
+Una de las cosas m'as básicas que se puede hacer con una *surface* es asignar píxels individuales, lo cual tiene el efecto de pintar un pequeño punto. No suele ser necesario pintar píxels uno a uno, puesto que suele haber formas más eficientes para pintar imágenes, pero puede ser útil para ciertos casos o para pintar de manera offline.
+
+Para pintar un píxel solo se puede usar el método *set_at*, que recibe la coordenada destino y el color al cual se quiere poner ese píxel.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+from random import randint
+
+rand_col = (randint(0, 255), randint(0, 255), randint(0, 255))
+
+for _ in range(100):
+    rand_pos = (randint(0, 639), randint(0, 479))
+    screen.set_at(rand_pos, rand_col)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [set_pixel_random]: Asignando Píxels Aleatoriamente]
+
+Usando el paquete *random* para generar números aleatorios, se elige un color de manera aleatoria en cada componente, rojo, verde y azul. Y luego se ponen una serie de píxels de la pantalla con ese color, calculando las coordenadas de manera aleatoria.
+
+### Leyendo Píxels en *Surfaces*
+
+El complemento a la función *set_at* es la función *get_at*, la cual devuelve el color del píxel en una coordenada concreta. Obtener el color de un píxel puede ser necesario en algún momento, por ejemplo, para resolver una detección de colisiones entre dos objetos, y determinar por código si el personaje del jugador está de pie sobre una superficie mirando el color del píxel debajo de sus pies. Si todas las plataformas y obstáculos tienen un color determinado (o rango de colores), puede funcionar. El método *get_at* recibe solo un parámetro, una tupla de coordenadas del píxel al que se quiere mirar.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+color = screen.get_at((100, 100))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [get_pixel]: Leyendo el Color de un Píxel]
+
+Este método puede ser extremadamente lento si se lee de una *surface* de *hardware*. Es posible que la ventana sea de este tipo, sobre todo si se usa en pantalla completa, y por tanto, se debe evitar este sistema.
+
+### Bloqueando *Surfaces*
+
+Cada vez que PyGame pinta sobre una *surface*, primero tiene que bloquearla. Cuando una *surface* está bloqueada, se tiene control absoluto sobre ella y ningún otro proceso en el ordenador puede usarla hasta que se desbloquee. El bloqueo y desbloqueo de una *surface* se gestiona automáticamente siempre que se pinta en una *surface*, pero puede llegar a ser poco eficiente su PyGame tiene que hacerlo muchas veces.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.lock()
+for _ in range(100):
+    rand_pos = (randint(0, 639), randint(0, 479))
+    screen.set_at(rand_pos, rand_col)
+screen.unlock()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [lock_surface]: Bloquear una *Surface*]
+
+En el ejemplo anterior, donde se asignaban un número de píxels a un color aleatorio, se puede mejorar el rendimiento si se bloquea a mano la *surface*. En el caso normal, cada vez que PyGame llama a la función *set_at* tiene que bloquear la *surface*, cambiar el color del píxel, y luego desbloquearla. Pero si especifícamente se bloquea la *surface* antes del bucle, PyGame ya no tiene que bloquearla en cada llamada a *set_at* y se ahorra un tiempo en ese proceso. Y solo se desbloquea al final, cuando ya se han pintado todo los píxels.
+
+Hay que tener cuidado, de desbloquear siempre una *surface* que ha sido previamente bloqueada, si se olvida este segundo paso se puede producir un bloqueo del juego.
+
+No todas las *surfaces* necesitan de este mecanismo de bloqueo, las que son *hardware* suelen necesitarlo, las que son *software no. Se puede usar el método *mustlock* de un objeto *Surface* antes de hacer ningún bloqueo para averiguar si es necesario hacerlo o no. De todas maneras, no hay ningún problema en bloquear una *surface* que no lo necesite, así que se pueden bloquear siempre para curarse en salud cuando se va a hacer un pintado masivo sobre cualquier *surface*.
+
+### *Blitting*
+
+El método de las *surfaces* que más se suele usar el *blit*, que es el acrónimo de *bit block transfer*, o transferencia de bloques de bits. Significa simplemente copiar datos de imagen de una *surface* a otra. Se usa para pintar fondos de pantalla, fuentes, personajes,... casi cualquier cosa en un juego.
+
+Para copiar una imagen, se llama al método *blit* desde el objeto *Surface* destino de la copia (a menudo la pantalla), y se le pasa como parámetro el *surface* origen y a continuación la coordenada donde se quiere copiar. Se puede copiar solo una parte de la *surface* pasando un tercer parámetro con un rectángulo para definir la región origen a copiar.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.blit(background, (0, 0))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [blit]: Copiar *background* sobre la Pantalla en (0,0)]
+
+Este ejemplo copia la *surface* llamada *background* sobre la pantalla, en la esquina superior izquierda. Si el *background* tiene las mismas dimensiones que la pantalla, se puede evitar la llamada a *fill* con un color solido.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+screen.blit(hero, (300, 200), (10 * n_frame, 0, 100, 100))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [blit_rect]: Copiar un Rectángulo de *hero* sobre la Pantalla]
+
+Si se tiene una imagen que contiene varios frames de una animación de un personaje caminando, se puede usar la funcionalidad de copiar un rectángulo para copiar ese trozo de imagen sobre la pantalla. Cambiando el valor de *n_frame* se puede copiar de un area de la *surface* de origen distinta y pintar un estado de la animación distinta.
+
+![Figure [res/005_002]: Ciclo de Animación](res/005_.jpg)
+
+Dibujar Formas
+--------------------------------------------------------------
+
+En algunos ejemplos anteriores se han usado funciones del módulo *draw* para pintar formas geométricas, como lineas, círculos,... Se pueden usar estos métodos para crear un juego sin necesidad de cargar ninguna imagen de disco. El juego clásico *Asteroids* es un ejemplo de un juego que solo usa formas dibujadas con líneas. Incluso aunque no se use de forma intensiva en los videjuegos convencionales, puede ser útil experimentar con este módulo para conocer como pintar formas simples, que muchas veces pueden usarse como placeholders para programar la lógica del juego mientras los *assets* definitivos se están produciendo por los artistas. Incluso se puede usar como una capa de gráficos de depuración sobre el juego cuando se necesita visualizar lo que está sucediendo en el código.
+
+En general, para todas las llamadas a las funciones en el módulo *draw* los dos primeros parámetros son los mismos, la *surface* sobre la que se quiere pintar (que puede ser la pantalla o cualquier otra *surface*), y a continucación el color con el que se quiere pintar. Cada función también recibirá al menos un punto, y posiblemente una lista de puntos. Para pasar un punto hay que hacerlo como tupla con las coordenadas *x* e *y*, donde (0, 0) es la esquina superior izquierda.
+
+Estas funciones devuelven un objeto *Rect* que informa del área del *surface* sobre la que se ha pintado, lo cual puede ser útil si se quieren refrescar solo aquellas partes de la pantalla que han cambiado.
+
+### Rectángulos
+
+La función *pygame.draw.rect* dibuja un rectángulo en una *surface*, además de la *surface* de destino y el color, esta función recibe las dimensiones del rectángulo que se quiere dibujar y el ancho de la línea. Si se pasa un 0 como *width* de la línea o se omite dicho parámetro, el rectángulo estará relleno del color sólido, de lo contrario, se dibujarán solo los bordes.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.rect(screen, (100, 40, 180), Rect((10, 10), (100, 20)))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_rect]: Dibujar un Rectángulo Sólido]
+
+Hay otra manera de dibujar rectángulos sólidos sobre una *surface*, el método *fill* de un objeto *Surface* recibe un rectángulo que define parte de la *surface* a rellenar, y dibuja un rectángulo perfecto. De hecho, este método puede ser más rapido que el de *draw*, puesto que puede ser potencialmente acelerado por hardware.
+
+### Polígono
+
+Un polígono es una forma con muchos lados, desde un triángulo hasta un miriágono (con 10.000 lados). Una llamada a *pygame.draw.polygon* recibe una lista de puntos y dibuja una forma entre ellos. También puede recibir el parámetro opcionar *width* que actua de igual manera.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.polygon(screen, (0,255,0), points)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_polygon]: Dibujar un Polígono Sólido]
+
+### Círculos
+
+La función *circle* pinta un círculo sobre una surface. Recibe el centro y el radio (distancia del centro al borde) del círculo, y también tiene como parámetro opcional *width* para la línea de la forma.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.circle(screen, (255,0,0), (100,100), 40)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_circle]: Dibujar un Círculo Sólido]
+
+### Elipses
+
+Se puede pensar en una elipse como un circulo achatado, si hubiera que coger un círculo y meterlo dentro de un rectángulo, acabaría como una elipse. La función *ellipse* recibe un rectángulo dentro del cual la elipse debe encajar, además del paramétro *width* habitual.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.ellipse(screen, (255,0,0), (100,100,40,80))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_ellipse]: Dibujar una Elipse Sólida]
+
+### Arcos
+
+La función *arc* dibuja una sección de una elipse, pero solo el borde, no opción de relleno para los arcos. Recibe un rectángulo como la elipse, que define el marco al que debería ajustarse la elipse completa, y dos ángulos en radianes. El primer ángulo es donde debería empezar a dibujarse el arco, y el segundo donde debería parar. También recibe el parámetro *width* para el ancho de la línea del pintado, pero esta vez por defecto es 1, y se pueden usar valores más grandes para líneas más gruesas.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.arc(screen, (0,0,0), (0,0,100,60), 0, 3.14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_arc]: Dibujar un Arco]
+
+### Líneas
+
+Una llamada a *line* dibuja una línea entre dos puntos, y después de la *surface* y el color, recibe dos puntos como parámetros de entrada, el punto inicial y el punto final de la línea a dibujar. También recibe el habitual parámetro *width*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.line(screen, (0,0,0), (0,100), (100,200))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_line]: Dibujar una Línea]
+
+Muy a menudo se pintan líneas en secuencia, de manera que una empieza donde acaba la anterior. El primer parámetro a *lines* es un booleano que indica si el grupo de líneas es cerrado. Si se pone a *True* se pintará una línea adicional desde el último punto de la lista al primero, en caso contrario, se quedará abierto. Tras este parámetro se pasa una lista de puntos y el habitual *width*.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Python
+pygame.draw.lines(screen, (0,255,0), False, points)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Listing [draw_lines]: Dibujar Líneas desde una Listas de Puntos]
+
+Usando las funciones anteriores se puede observar que aparecen muy escalonadas, con dientes de sierra, esto es porque un píxel solo puede ser pintado en una coordenada en una rejilla, que puede no caer exactamente sobre una línea si no es horizontal o vertical. Este efecto se llama *aliasing*, algo en lo que se trabaja mucho para evitarlo. Cualquier técnica dedicada a evitar este efecto se llama *antialiasing*.
+
+PyGame puede pintar líneas sin *alias* que parecen mucho más suaves que las creadas con *line*, y esta función es *aaline*, *antialiased line*. Recibe los mismos parámetros de *line*, pero dibuja líneas suavizadas. El único problema de esto es que son más lentas de pintar que las normales. Y tal y como *lines* dibuja varias líneas, existe el método *aalines* para dibujar líneas en secuencia de forma suavizada.
+
+Ejercicios
+==============================================================
+- Crear un fichero de imagen con formato *BMP* con todos los colores posibles. Usando la función *pygame.iamge.save* para guardar una *surface* a disco, que recibe como primer parámetro la *surface* y como segundo la ruta del fichero a grabar.
+- De manera similar a como se ha mostrado en el ejemplo del *Color Picker*, hacer un programa que dados dos colores iniciales, con el ratón se use un *slider* para determinar el factor de mezcla entre dichos colores y se muestre por pantlla dicho color.
+- Crear un programa que pinte un poligono con los clicks del ratón, que sea de 20 puntos de longitud, y que nunca acabe. Como un juego *snake*.
+- Programa para dibujar un arco o una elipse desde un punto inicial marcado con el click del ratón, y que la dibuje en función del movimiento del mismo.
+
+<link rel="stylesheet" href="res/md/viu.css">
+<style class="fallback">body{visibility:hidden}</style><script>markdeepOptions={tocStyle:'long'};</script>
+<!-- Markdeep: --><script src="res/md/markdeep.min.js?" charset="utf-8"></script>
