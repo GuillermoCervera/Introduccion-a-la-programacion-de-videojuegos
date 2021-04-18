@@ -19,5 +19,8 @@ class Config:
     fps_foreground_color = (255,255,255)
     fps_background_color = (0,0,0)
 
+    gunfire_filename = ["shmup", "assets", "sfx", "gunfire.wav"]
+    theme_filename = ["shmup", "assets", "music", "mission.ogg"]
+
     def __init__(self):
         pass
