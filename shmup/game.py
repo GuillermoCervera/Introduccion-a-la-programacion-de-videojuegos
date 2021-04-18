@@ -6,10 +6,12 @@ import os
 from shmup.fpsstats import FPSStats
 from shmup.config import Config
 from shmup.hero import Hero
+from shmup.sound_manager import Soundmanager
 
 class Game:
 
     def __init__(self):
+        pygame.mixer.pre_init(44100, -16, 2, 4096)
         pygame.init()
 
         self.__screen = pygame.display.set_mode(Config.screen_size,0,32)
@@ -19,6 +21,8 @@ class Game:
 
         self.__font = pygame.font.Font(os.path.join(*Config.font_filename), Config.font_fps_size)
         self.__fps_stats = FPSStats(self.__font)
+
+        self.__load_sounds()
 
         self.__running = False
 
@@ -55,6 +59,7 @@ class Game:
 
     def __update(self, delta):
         self.__hero.update(delta)
+        Soundmanager.instance().update(delta)
 
     def __render(self):
         self.__screen.fill(Config.background_color)
@@ -70,3 +75,7 @@ class Game:
         current = pygame.time.get_ticks()
         delta = current - last
         return delta, current
+
+    def __load_sounds(self):
+        Soundmanager.instance().add_sound(Config.gunfire_filename, "gunfire")
+        Soundmanager.instance().add_music(Config.theme_filename, "mission_theme")
