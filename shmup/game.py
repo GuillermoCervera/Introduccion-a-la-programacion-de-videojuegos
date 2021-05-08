@@ -5,8 +5,9 @@ import os
 
 from shmup.fpsstats import FPSStats
 from shmup.config import Config
-from shmup.hero import Hero
-from shmup.sound_manager import Soundmanager
+from shmup.assets.sound_manager import Soundmanager
+from shmup.assets.assetmanager import AssetType, AssetManager
+from shmup.states.statemanager import StateManager
 
 class Game:
 
@@ -17,12 +18,10 @@ class Game:
         self.__screen = pygame.display.set_mode(Config.screen_size,0,32)
         pygame.display.set_caption(Config.game_title)
 
-        self.__hero = Hero(self.__screen.get_size())
+        self.__load_assets()
+        self.__fps_stats = FPSStats()
 
-        self.__font = pygame.font.Font(os.path.join(*Config.font_filename), Config.font_fps_size)
-        self.__fps_stats = FPSStats(self.__font)
-
-        self.__load_sounds()
+        self.__state_manager = StateManager()
 
         self.__running = False
 
@@ -53,22 +52,24 @@ class Game:
                 self.__running = False
 
             if event.type == pygame.KEYDOWN:
-                self.__hero.handle_input(True, event.key)
-            if event.type == pygame.KEYUP:
-                self.__hero.handle_input(False, event.key)
+                if event.key == pygame.K_ESCAPE:
+                    self.__running = False
+                if event.key == pygame.K_F5:
+                    Config.debug = not Config.debug
+            self.__state_manager.handle_event(event)
 
     def __update(self, delta):
-        self.__hero.update(delta)
+        self.__state_manager.update(delta)
         Soundmanager.instance().update(delta)
 
     def __render(self):
         self.__screen.fill(Config.background_color)
-        self.__hero.render(self.__screen)
-        self.__fps_stats.render_stats(self.__screen)
+        self.__state_manager.render(self.__screen)
+        if Config.debug:
+            self.__fps_stats.render_stats(self.__screen)
         pygame.display.update()
 
     def __quit(self):
-        self.__hero.release()
         pygame.quit()
 
     def __calc_delta(self, last):
@@ -76,6 +77,9 @@ class Game:
         delta = current - last
         return delta, current
 
-    def __load_sounds(self):
-        Soundmanager.instance().add_sound(Config.gunfire_filename, "gunfire")
-        Soundmanager.instance().add_music(Config.theme_filename, "mission_theme")
+    def __load_assets(self):
+        AssetManager.instance().load(AssetType.SpriteSheet, Config.entities_name, Config.entities_filename, data_filename = Config.entities_data_filename)
+        AssetManager.instance().load(AssetType.Font, Config.font_name, Config.font_filename, size = Config.font_fps_size)
+
+        AssetManager.instance().load(AssetType.Sound, Config.gunfire_name, Config.gunfire_filename)
+        AssetManager.instance().load(AssetType.Music, Config.theme_name, Config.theme_filename)
