@@ -1,41 +1,39 @@
 import pygame
 from os import path
 
-from shmup.assets.assetmanager import AssetType, AssetManager
+from shmup.assets.asset_manager import AssetManager, AssetType
 
-class Soundmanager:
+class SoundManager:
 
     _instance = None
 
     @staticmethod
     def instance():
-        if Soundmanager._instance is None:
-            Soundmanager()
-        return Soundmanager._instance
+        if SoundManager._instance is None:
+            SoundManager()
+        return SoundManager._instance
 
     def __init__(self):
-        if Soundmanager._instance is None:
-            Soundmanager._instance = self
+        if SoundManager._instance is None:
+            SoundManager._instance = self
 
             self.__sound_volume = 1.0
-            self.__music_volume = 1.0
+            self.__music_volume = 0.6
 
             self.__current_music = None
             self.__next_music = None
 
         else:
-            raise exception("Soundmanager is a singleton")
-
+            raise exception("Sound Manager doesn't Allow Multiple Instances")
 
     def play_sound(self, name):
         sound = AssetManager.instance().get(AssetType.Sound, name)
-
         sound.set_volume(self.__sound_volume)
         sound.play()
 
     def play_music(self, name):
         if name is self.__current_music:
-            return 
+            return
 
         music = AssetManager.instance().get(AssetType.Music, name)
 
@@ -44,10 +42,14 @@ class Soundmanager:
         self.__current_music = name
         pygame.mixer.music.play(-1)
 
+    def stop_music(self, time = 100):
+        pygame.mixer.music.fadeout(time)
+        self.__current_music = None
+
     def play_music_fade(self, name):
         if name is self.__current_music:
-            return 
-        
+            return
+
         self.__next_music = name
         pygame.mixer.music.fadeout(500)
 
