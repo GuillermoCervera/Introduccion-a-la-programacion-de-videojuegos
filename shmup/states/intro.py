@@ -2,7 +2,7 @@ import pygame
 from enum import Enum
 
 from shmup.states.state import State
-from shmup.assets.assetmanager import AssetManager, AssetType
+from shmup.assets.asset_manager import AssetManager, AssetType
 from shmup.ui.label import UILabel
 from shmup.ui.label_clickable import UILabelClickable
 from shmup.config import Config
@@ -16,14 +16,13 @@ class Intro(State):
         super().__init__()
         self.next_state = "GamePlay"
 
-        center = [x/2 for x in Config.screen_size]
         font = AssetManager.instance().get(AssetType.Font, Config.font_name)
-
-        self.__button = UILabelClickable(center, font, "Click Here To Start Game", (120, 120, 190), (200, 200, 250), action = Actions.Next_Level)
-        self.__label =  UILabel((center[0], 100), font, "ShMUp Game, A Student's VIU Project", (200, 50, 50))
+        center_position = [x/2 for x in Config.screen_size]
+        self.__button = UILabelClickable(center_position, font, "Click To Start The Game", (140, 140, 190), (200, 200, 250), action = Actions.Next_Level)
+        self.__label = UILabel((center_position[0], 100), font, "ShMup Game A VIU Project", (200, 60, 60))
 
     def enter(self):
-        pass
+        self.done = False
 
     def exit(self):
         pass

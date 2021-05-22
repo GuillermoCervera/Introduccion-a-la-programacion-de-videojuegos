@@ -1,9 +1,9 @@
 import pygame
 from enum import Enum
 
-from shmup.entities.gameobject import GameObject
-from shmup.assets.assetmanager import AssetManager, AssetType
 from shmup.config import Config
+from shmup.assets.asset_manager import AssetManager, AssetType
+from shmup.entities.gameobject import GameObject
 
 class ProjectileType(Enum):
     AlliedBullet = 0,
@@ -20,7 +20,11 @@ class Projectile(GameObject):
         self.__velocity = velocity
 
         if self.__type == ProjectileType.AlliedBullet:
-            _, clip = AssetManager.instance().get(AssetType.SpriteSheet, Config.allied_bullet_name, sheet_name = Config.entities_name)
+            self.__name = Config.allied_bullet_entity_name
+        elif self.__type == ProjectileType.EnemyBullet:
+            self.__name = Config.enemy_bullet_entity_name
+
+        _, clip = AssetManager.instance().get(AssetType.SpriteSheet, self.__name, sheet_name = Config.entities_name)
 
         self.rect = clip.copy()
         self.render_rect = clip.copy()
@@ -36,9 +40,8 @@ class Projectile(GameObject):
             self.kill()
 
     def render(self, surface):
-        if self.__type == ProjectileType.AlliedBullet:
-            image, clip = AssetManager.instance().get(AssetType.SpriteSheet, Config.allied_bullet_name, sheet_name = Config.entities_name)
-        
+        image, clip = AssetManager.instance().get(AssetType.SpriteSheet, self.__name, sheet_name = Config.entities_name)
+
         surface.blit(image, self.render_rect, clip)
 
         if Config.debug:

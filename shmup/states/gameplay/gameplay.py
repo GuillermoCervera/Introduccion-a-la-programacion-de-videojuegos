@@ -1,12 +1,17 @@
 import pygame
 
-from shmup.world import World
 from shmup.states.state import State
+from shmup.states.gameplay.world import World
+from shmup.states.gameplay.events import game_over_event
+from shmup.assets.sound_manager import SoundManager
+from shmup.assets.asset_manager import AssetManager, AssetType
+from shmup.config import Config
 
 class GamePlay(State):
+
     def __init__(self):
         super().__init__()
-        self.next_state = ""
+        self.next_state = "Intro"
         self.__world = World()
 
     def handle_input(self, event):
@@ -14,6 +19,8 @@ class GamePlay(State):
             self.__world.handle_input(event.key, True)
         if event.type == pygame.KEYUP:
             self.__world.handle_input(event.key, False)
+        if event.type == game_over_event:
+            self.done = True
 
     def update(self, delta_time):
         self.__world.update(delta_time)
@@ -22,7 +29,8 @@ class GamePlay(State):
         self.__world.render(surface)
 
     def enter(self):
-        pass
+        self.done = False
+        self.__world.init()
 
     def exit(self):
-        pass
+        self.__world.quit()
