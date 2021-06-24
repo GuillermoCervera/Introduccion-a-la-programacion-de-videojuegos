@@ -1,3 +1,6 @@
+# Guillermo José Cervera Cervera
+
+from operator import attrgetter
 import pygame
 from os import path
 import math
@@ -80,22 +83,51 @@ def calc_path(maze_matrix, start, end):
     start_node.g = start_node.h = start_node.f = 0
     end_node = Node(None, end)
     end_node.g = end_node.h = end_node.f = 0
-
+    
     current_node = start_node
-
+    
     #Tu codigo aqui
-
-    # test if goal is reached or not, if yes then return the path
-    if current_node == end_node:
-        return return_path(current_node, maze)
-
-    #Tu codigo aqui
+    list1=[]
+    list2=[]
+    list1.append(start_node)
+    is_not_in_list1=1
+    is_not_in_list2=1
+    while (len(list1)>=1):
+        current_node=max(list1,key=attrgetter('f'))
+        
+        # test if goal is reached or not, if yes then return the path
+        if(current_node == end_node):
+            return return_path(current_node,maze_matrix)
+        
+        #Tu codigo aqui
+        list1.pop(list1.index(current_node))
+        list2.append(current_node)
+        for pos in[(-1,0),(0,-1),(0,1),(1,0)]:
+            pos=(pos[0]+current_node.position[0],pos[1]+current_node.position[1])
+            if(pos[1]>(len(maze_matrix[len(maze_matrix)-1])-1)):
+                continue
+            if(maze_matrix[pos[0]][pos[1]]>=1):
+                continue
+            n_node=Node(current_node,pos)
+            for node in list2:
+                if(n_node.__eq__(node)):
+                    is_not_in_list2=0
+                    continue
+            if(not is_not_in_list2):
+                is_not_in_list2=1
+                continue
+            if(is_not_in_list1):
+                list1.append(n_node)
+            for node in list1:
+                if n_node.__eq__(node):
+                    if (node.g<n_node.g):
+                        break
 
 def euclidean_distance(src, dst):
     x_dist = abs(src[0] - dst[0])
     y_dist = abs(src[1] - dst[1])
     return 10 * math.sqrt((x_dist * x_dist) + (y_dist * y_dist))
-    # return ((src[0] - dst[0]) ** 2) + ((src[1] - dst[1]) ** 2)
+    return ((src[0] - dst[0]) ** 2) + ((src[1] - dst[1]) ** 2)
 
 def manhattan_distance(src, dst):
     x_dist = abs(src[0] - dst[0])
